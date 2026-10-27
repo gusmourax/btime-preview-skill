@@ -1,0 +1,821 @@
+<title>Prévia Portal de Pedidos</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<!--
+  btime-preview · template v1
+  Blocos, na ordem (só os marcados EDITAR mudam por projeto):
+    1. style btp-shell ........ motor visual da página (NAO EDITAR)
+    2. style app-theme ........ EDITAR: tokens do design system do cliente (--app-*)
+    3. style app-css .......... EDITAR: CSS extra dos componentes da prévia (opcional)
+    4. script btp-data ........ EDITAR: projeto, fontes, telas e decisões (JSON)
+    5. template data-shared ... EDITAR: trechos repetidos em várias telas (menu lateral)
+    6. template data-screen ... EDITAR: um por tela, com o HTML da prévia
+    7. script app-js .......... EDITAR: interações específicas (opcional)
+    8. script btp-engine ...... motor que monta tudo (NAO EDITAR)
+  Edite com substituições exatas dentro de cada bloco, nunca recortando o arquivo por busca de texto.
+  Contrato completo: references/artefato.md da skill.
+-->
+<style id="btp-shell">
+/* Layout: ficha técnica de produto. Cabeçalho com resumo e legenda, uma ficha por tela (prévia em moldura + decisões numeradas abaixo), depois as fontes. */
+:root {
+  --bg: #f3f4f6;
+  --surface: #ffffff;
+  --sunk: #eceef2;
+  --ink: #15171c;
+  --muted: #5b616e;
+  --line: #dcdfe5;
+  --accent: #1f5fd6;
+  --t-reuniao: #1f5fd6;   --t-reuniao-soft: #e4ecfc;
+  --t-documento: #7a3fd1; --t-documento-soft: #efe6fc;
+  --t-referencia: #0b7a6e; --t-referencia-soft: #dcf2ee;
+  --t-inferencia: #687083; --t-inferencia-soft: #eceef2;
+  --t-aberto: #c2410c;    --t-aberto-soft: #fdebdf;
+  --f-display: "Schibsted Grotesk", "Segoe UI", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111318; --surface: #191c22; --sunk: #13161b; --ink: #eceef2; --muted: #a2a8b5; --line: #2c313b; --accent: #7aa7ff;
+    --t-reuniao: #7aa7ff; --t-reuniao-soft: #1a2741;
+    --t-documento: #b996ff; --t-documento-soft: #2a1f42;
+    --t-referencia: #4fd1bf; --t-referencia-soft: #0f2f2b;
+    --t-inferencia: #9aa1b0; --t-inferencia-soft: #23272f;
+    --t-aberto: #ff9a5c; --t-aberto-soft: #3a2014;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111318; --surface: #191c22; --sunk: #13161b; --ink: #eceef2; --muted: #a2a8b5; --line: #2c313b; --accent: #7aa7ff;
+  --t-reuniao: #7aa7ff; --t-reuniao-soft: #1a2741;
+  --t-documento: #b996ff; --t-documento-soft: #2a1f42;
+  --t-referencia: #4fd1bf; --t-referencia-soft: #0f2f2b;
+  --t-inferencia: #9aa1b0; --t-inferencia-soft: #23272f;
+  --t-aberto: #ff9a5c; --t-aberto-soft: #3a2014;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15.5px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 72px;
+}
+#btp { max-width: 1240px; margin: 0 auto; display: grid; gap: 28px; }
+body.btp-so #btp { max-width: none; }
+#btp :is(h1, h2, h3):not(.btp-canvas *) { font-family: var(--f-display); margin: 0; line-height: 1.15; text-wrap: balance; }
+#btp h1:not(.btp-canvas *) { font-size: clamp(1.75rem, 3.4vw, 2.5rem); letter-spacing: -.01em; }
+#btp h2:not(.btp-canvas *) { font-size: 1.35rem; }
+#btp h3:not(.btp-canvas *) { font-size: 1.05rem; }
+#btp p:not(.btp-canvas *) { margin: 0; }
+.btp-head a, .btp-panel a, .btp-dcard a, .btp-pop a { color: var(--accent); }
+#btp :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btp-eyebrow { font-family: var(--f-mono); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.btp-muted { color: var(--muted); }
+.btp-lead { max-width: 72ch; color: var(--muted); }
+code { font-family: var(--f-mono); font-size: .85em; background: var(--sunk); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; overflow-wrap: anywhere; }
+
+/* Cabeçalho */
+.btp-head { display: grid; gap: 14px; }
+.btp-stats { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: .95rem; }
+.btp-stats b { font-family: var(--f-display); font-size: 1.15rem; font-variant-numeric: tabular-nums; margin-right: 4px; }
+.btp-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding-block: 10px; }
+.btp-legend { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.btp-legend > span { font-size: .82rem; color: var(--muted); margin-right: 4px; }
+.btp-lg { all: unset; cursor: pointer; display: inline-flex; gap: 7px; align-items: center; font-size: .84rem; padding: 3px 9px 3px 6px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); }
+.btp-lg i { width: 22px; height: 12px; border: 2px dashed currentColor; border-radius: 3px; }
+.btp-lg[aria-pressed="false"] { opacity: .45; text-decoration: line-through; }
+.btp-lg:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btp-switch { display: inline-flex; gap: 2px; background: var(--sunk); border: 1px solid var(--line); border-radius: 9px; padding: 3px; }
+.btp-switch button { all: unset; cursor: pointer; font-weight: 600; font-size: .86rem; padding: 5px 12px; border-radius: 6px; color: var(--muted); }
+.btp-switch button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / .1); }
+.btp-switch button:focus-visible { outline: 2px solid var(--accent); }
+.btp-toc { display: flex; flex-wrap: wrap; gap: 6px; }
+.btp-toc a { text-decoration: none; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 3px 11px; font-size: .86rem; display: inline-flex; gap: 6px; align-items: baseline; }
+.btp-toc a:hover { border-color: var(--accent); }
+.btp-toc a small { font-family: var(--f-mono); font-size: .7rem; color: var(--muted); }
+.btp-banner { border: 1px dashed var(--t-aberto); background: var(--t-aberto-soft); border-radius: 10px; padding: 10px 14px; font-size: .92rem; }
+
+/* Cores por tipo */
+.t-reuniao { --tc: var(--t-reuniao); --ts: var(--t-reuniao-soft); }
+.t-documento { --tc: var(--t-documento); --ts: var(--t-documento-soft); }
+.t-referencia { --tc: var(--t-referencia); --ts: var(--t-referencia-soft); }
+.t-inferencia { --tc: var(--t-inferencia); --ts: var(--t-inferencia-soft); }
+.t-aberto { --tc: var(--t-aberto); --ts: var(--t-aberto-soft); }
+.btp-lg.t-reuniao, .btp-lg.t-documento, .btp-lg.t-referencia, .btp-lg.t-inferencia, .btp-lg.t-aberto { color: var(--tc); }
+.btp-chip { display: inline-flex; align-items: center; gap: 4px; font-family: var(--f-mono); font-size: .72rem; font-weight: 600; padding: 2px 7px; border-radius: 4px; background: var(--ts, var(--sunk)); color: var(--tc, var(--muted)); white-space: nowrap; }
+.btp-chip.plain { background: var(--sunk); color: var(--ink); }
+
+/* Ficha de tela */
+.btp-screen { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 16px; scroll-margin-top: 16px; min-width: 0; }
+.btp-screen > * { min-width: 0; }
+.btp-screen-head { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: flex-start; justify-content: space-between; }
+.btp-screen-head .t { display: grid; gap: 4px; min-width: 0; }
+.btp-screen-head .t > div { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btp-why { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: .86rem; color: var(--muted); }
+.btp-tabs { display: inline-flex; gap: 2px; background: var(--sunk); border: 1px solid var(--line); border-radius: 9px; padding: 3px; }
+.btp-tabs button { all: unset; cursor: pointer; font-weight: 600; font-size: .85rem; padding: 5px 12px; border-radius: 6px; color: var(--muted); }
+.btp-tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / .1); }
+.btp-tabs button:focus-visible { outline: 2px solid var(--accent); }
+
+/* Moldura da prévia */
+.btp-frame { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--sunk); min-width: 0; }
+.btp-frame.screen-mark { outline: 2px dashed var(--tc); outline-offset: 4px; }
+.btp-chrome { display: flex; gap: 10px; align-items: center; padding: 7px 12px; border-bottom: 1px solid var(--line); background: var(--surface); font-family: var(--f-mono); font-size: .74rem; color: var(--muted); }
+.btp-chrome .dots { display: inline-flex; gap: 5px; }
+.btp-chrome .dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+.btp-chrome .url { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background: var(--sunk); border-radius: 6px; padding: 2px 10px; }
+.btp-chrome .why { display: inline-flex; gap: 4px; align-items: center; }
+.btp-stage { overflow: auto; position: relative; max-height: 820px; }
+.btp-canvas { position: relative; min-width: var(--btp-min, 0); }
+.btp-frame.mobile .btp-stage { display: grid; justify-items: center; padding: 18px 12px; }
+.btp-frame.mobile .btp-canvas { width: 390px; max-width: 100%; border: 8px solid var(--ink); border-radius: 28px; overflow: hidden; }
+.btp-layer { position: absolute; inset: 0; pointer-events: none; z-index: 40; }
+.btp-badges { position: absolute; display: flex; gap: 3px; transform: translate(-100%, -55%); pointer-events: auto; }
+.btp-badge { all: unset; cursor: pointer; font: 600 10.5px/1 var(--f-mono); color: #fff; background: var(--tc); padding: 3px 5px; border-radius: 4px; box-shadow: 0 1px 3px rgb(0 0 0 / .25); white-space: nowrap; }
+.btp-badge:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.btp-badge.is-hot { transform: scale(1.2); }
+.btp-mark { outline: 2px dashed var(--tc) !important; outline-offset: 3px; transition: background-color .15s, outline-offset .15s; }
+.btp-mark.is-hot { outline-style: solid !important; outline-offset: 5px; background-color: color-mix(in srgb, var(--tc) 12%, transparent) !important; }
+.btp-flash { animation: btp-flash 1.2s ease 2; }
+@keyframes btp-flash { 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--tc, var(--accent)) 35%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .btp-flash { animation: none; } .btp-mark { transition: none; } }
+body.btp-nomarks .btp-mark { outline: 0 !important; background-color: transparent !important; }
+body.btp-nomarks .btp-layer { visibility: hidden; }
+body.btp-nomarks .btp-frame.screen-mark { outline: 0; }
+body.off-reuniao .btp-mark.t-reuniao, body.off-documento .btp-mark.t-documento, body.off-referencia .btp-mark.t-referencia, body.off-inferencia .btp-mark.t-inferencia, body.off-aberto .btp-mark.t-aberto { outline: 0 !important; }
+body.off-reuniao .btp-badge.t-reuniao, body.off-documento .btp-badge.t-documento, body.off-referencia .btp-badge.t-referencia, body.off-inferencia .btp-badge.t-inferencia, body.off-aberto .btp-badge.t-aberto { display: none; }
+.btp-toast { position: absolute; right: 14px; bottom: 14px; z-index: 50; background: #15171c; color: #fff; font-size: 13px; border-radius: 8px; padding: 8px 12px; box-shadow: 0 6px 20px rgb(0 0 0 / .25); }
+.btp-hoje { display: grid; gap: 14px; padding: 14px; }
+.btp-hoje figure { margin: 0; display: grid; gap: 6px; }
+.btp-hoje img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.btp-nohoje { font-size: .86rem; color: var(--muted); border-left: 2px solid var(--line); padding-left: 10px; }
+.btp-hoje figcaption { font-size: .86rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+/* Antes e depois */
+.btp-cmp { position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); --x: 50%; }
+.btp-cmp img { display: block; width: 100%; height: auto; }
+.btp-cmp .depois { position: absolute; inset: 0; clip-path: inset(0 0 0 var(--x)); }
+.btp-cmp .depois img { height: 100%; object-fit: cover; object-position: top left; }
+.btp-cmp .linha { position: absolute; top: 0; bottom: 0; left: var(--x); width: 2px; margin-left: -1px; background: var(--accent); pointer-events: none; }
+.btp-cmp .rot { position: absolute; top: 10px; font: 600 .72rem var(--f-mono); letter-spacing: .05em; text-transform: uppercase; background: rgb(0 0 0 / .62); color: #fff; padding: 3px 8px; border-radius: 4px; pointer-events: none; }
+.btp-cmp .rot.a { left: 10px; } .btp-cmp .rot.d { right: 10px; }
+.btp-cmp input[type=range] { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; }
+.btp-cmp:focus-within .linha { width: 3px; box-shadow: 0 0 0 2px var(--surface); }
+.btp-dcard header .mu { font: 600 .66rem var(--f-mono); text-transform: uppercase; letter-spacing: .05em; border: 1px solid var(--tc); color: var(--tc); padding: 0 5px; border-radius: 3px; }
+/* Captura de uma tela só (#so-T01): usada pelo capturar.mjs para gerar o print da versão nova */
+body.btp-so { padding: 0 !important; }
+.btp-so .btp-head, .btp-so .btp-foot, .btp-so .btp-chrome { display: none !important; }
+.btp-so .btp-frame { border: 0; border-radius: 0; outline: 0 !important; }
+.btp-so .btp-stage { max-height: none; overflow: visible; }
+
+/* Decisões abaixo da prévia */
+.btp-decs { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); align-items: start; }
+.btp-dcard { border: 1px solid var(--line); border-top: 3px dashed var(--tc); border-radius: 10px; background: var(--surface); padding: 12px 14px; display: grid; gap: 8px; min-width: 0; scroll-margin-top: 20px; }
+.btp-dcard.is-hot { border-color: var(--tc); background: var(--ts); }
+.btp-dcard header { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
+.btp-dcard header .id { font: 600 .78rem var(--f-mono); color: #fff; background: var(--tc); border-radius: 4px; padding: 2px 6px; }
+.btp-dcard header .tp { font: 600 .7rem var(--f-mono); letter-spacing: .05em; text-transform: uppercase; color: var(--tc); }
+.btp-dcard header .nv { font: 600 .66rem var(--f-mono); text-transform: uppercase; letter-spacing: .05em; background: var(--ink); color: var(--surface); padding: 1px 5px; border-radius: 3px; }
+.btp-dcard h3 { font-family: var(--f-body) !important; font-weight: 600; font-size: 1rem !important; }
+.btp-dcard .ex { font-size: .93rem; }
+.btp-q { margin: 0; border-left: 2px solid var(--tc); padding: 2px 0 2px 10px; display: grid; gap: 3px; }
+.btp-q p { font-size: .9rem; font-style: italic; color: var(--ink); }
+.btp-q footer { font-size: .78rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+.btp-q footer a { font-family: var(--f-mono); font-size: .72rem; text-decoration: none; }
+.btp-open { background: var(--t-aberto-soft); border-radius: 8px; padding: 8px 10px; font-size: .9rem; display: grid; gap: 4px; }
+.btp-open b { color: var(--t-aberto); }
+.btp-seeon { all: unset; cursor: pointer; justify-self: start; font-size: .8rem; font-weight: 600; color: var(--accent); }
+.btp-seeon:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Seções de apoio */
+.btp-panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 14px; scroll-margin-top: 16px; min-width: 0; }
+.btp-list { display: grid; gap: 10px; }
+.btp-src { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; padding-block: 10px; border-top: 1px solid var(--line); }
+.btp-src:first-child { border-top: 0; padding-top: 0; }
+.btp-src .meta { font-size: .86rem; color: var(--muted); }
+.btp-src .uses { display: flex; flex-wrap: wrap; gap: 4px; }
+.btp-src .uses a { text-decoration: none; }
+details.btp-hist summary { cursor: pointer; font-weight: 600; }
+details.btp-hist ul { margin: 8px 0 0; padding-left: 18px; font-size: .92rem; }
+.btp-foot { font-family: var(--f-mono); font-size: .72rem; color: var(--muted); text-align: center; }
+
+/* Modo protótipo */
+.btp-proto { display: grid; gap: 12px; grid-template-columns: 220px minmax(0, 1fr); align-items: start; }
+@media (max-width: 860px) { .btp-proto { grid-template-columns: minmax(0, 1fr); } }
+.btp-pnav { display: grid; gap: 4px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+@media (max-width: 860px) { .btp-pnav { position: static; display: flex; overflow-x: auto; padding-bottom: 4px; } }
+.btp-pnav button { all: unset; cursor: pointer; display: grid; gap: 1px; padding: 7px 10px; border-radius: 8px; border: 1px solid transparent; font-size: .9rem; white-space: nowrap; }
+.btp-pnav button small { font-family: var(--f-mono); font-size: .68rem; color: var(--muted); }
+.btp-pnav button[aria-current="page"] { background: var(--surface); border-color: var(--line); font-weight: 600; }
+.btp-pnav button:focus-visible { outline: 2px solid var(--accent); }
+.btp-pop { position: absolute; z-index: 60; width: min(360px, calc(100% - 24px)); background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-top: 3px dashed var(--tc); border-radius: 10px; padding: 12px 14px; display: grid; gap: 8px; box-shadow: 0 12px 32px rgb(0 0 0 / .22); font-family: var(--f-body); font-size: 14px; line-height: 1.5; }
+.btp-pop .x { all: unset; cursor: pointer; position: absolute; top: 6px; right: 10px; color: var(--muted); padding: 2px 4px; }
+
+/* ===== Kit de componentes da prévia (usa só tokens --app-*) ===== */
+.btp-root [hidden], .btp-hoje [hidden] { display: none !important; }
+.app { position: relative; display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: 520px; background: var(--app-bg); color: var(--app-ink); font-family: var(--app-font); font-size: 13.5px; line-height: 1.45; text-align: left; }
+.app.no-side { grid-template-columns: minmax(0, 1fr); }
+.app *, .app *::before, .app *::after { box-sizing: border-box; }
+.app-side { background: var(--app-side); color: var(--app-side-ink); padding: 14px 10px; display: flex; flex-direction: column; gap: 14px; }
+.app-brand { font-weight: 700; font-size: 15px; padding: 2px 8px; display: flex; gap: 8px; align-items: center; }
+.app-brand img { max-height: 30px; width: auto; }
+.app-nav { display: grid; gap: 2px; }
+.app-nav .lbl { font-size: 10px; letter-spacing: .07em; text-transform: uppercase; opacity: .55; padding: 8px 8px 3px; }
+.app-nav a, .app-nav button { all: unset; cursor: pointer; display: flex; gap: 8px; align-items: center; padding: 7px 9px; border-radius: var(--app-radius-sm); font-size: 13px; opacity: .78; }
+.app-nav a:hover, .app-nav button:hover { opacity: 1; background: rgb(255 255 255 / .06); }
+.app-nav .on { opacity: 1; font-weight: 600; background: var(--app-side-on); box-shadow: inset 2px 0 0 var(--app-primary); }
+.app-main { padding: 18px 20px 24px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.app-top { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.app-h { margin: 0; font-size: 19px; font-weight: 700; font-family: var(--app-font-display, var(--app-font)); }
+.app-sub { color: var(--app-muted); font-size: 12.5px; }
+.app-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.app-stack { display: grid; gap: 10px; }
+.app-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+.app-btn { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; justify-content: center; border: 1px solid var(--app-line); background: var(--app-surface); color: var(--app-ink); border-radius: var(--app-radius-sm); padding: 7px 13px; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.app-btn:hover { border-color: var(--app-primary); }
+.app-btn.pri { background: var(--app-primary); border-color: var(--app-primary); color: var(--app-primary-ink); }
+.app-btn.ghost { background: transparent; border-color: transparent; color: var(--app-primary); }
+.app-btn.danger { color: var(--app-bad); }
+.app-btn:focus-visible, .app-input:focus-visible, .app-select:focus-visible { outline: 2px solid var(--app-primary); outline-offset: 1px; }
+.app-card { background: var(--app-surface); border: 1px solid var(--app-line); border-radius: var(--app-radius); padding: 12px 14px; display: grid; gap: 6px; min-width: 0; }
+.app-card > .hd { display: flex; justify-content: space-between; gap: 8px; align-items: center; font-weight: 700; }
+.app-kpi { display: grid; gap: 2px; }
+.app-kpi .k { font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--app-muted); }
+.app-kpi .v { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.app-kpi .s { font-size: 11.5px; color: var(--app-muted); }
+.app-field { display: grid; gap: 4px; font-size: 12px; color: var(--app-muted); min-width: 0; }
+.app-input, .app-select { font: inherit; font-size: 13px; color: var(--app-ink); background: var(--app-surface); border: 1px solid var(--app-line); border-radius: var(--app-radius-sm); padding: 7px 10px; min-width: 0; width: 100%; }
+.app-table-wrap { overflow-x: auto; border: 1px solid var(--app-line); border-radius: var(--app-radius); background: var(--app-surface); }
+.app-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.app-table th { text-align: left; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--app-muted); font-weight: 600; padding: 9px 12px; border-bottom: 1px solid var(--app-line); white-space: nowrap; }
+.app-table td { padding: 9px 12px; border-bottom: 1px solid var(--app-line); white-space: nowrap; }
+.app-table tr:last-child td { border-bottom: 0; }
+.app-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.app-table tbody tr[data-goto], .app-table tbody tr[data-open] { cursor: pointer; }
+.app-table tbody tr[data-goto]:hover td, .app-table tbody tr[data-open]:hover td { background: var(--app-primary-soft); }
+.app-pill { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 999px; background: var(--app-bg); color: var(--app-muted); }
+.app-pill.ok { background: color-mix(in srgb, var(--app-ok) 14%, transparent); color: var(--app-ok); }
+.app-pill.warn { background: color-mix(in srgb, var(--app-warn) 16%, transparent); color: var(--app-warn); }
+.app-pill.bad { background: color-mix(in srgb, var(--app-bad) 14%, transparent); color: var(--app-bad); }
+.app-pill.info { background: var(--app-primary-soft); color: var(--app-primary); }
+.app-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--app-line); flex-wrap: wrap; }
+.app-tabs button { all: unset; cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--app-muted); padding: 8px 12px; border-bottom: 2px solid transparent; }
+.app-tabs button[aria-selected="true"] { color: var(--app-primary); border-bottom-color: var(--app-primary); }
+.app-overlay { position: absolute; inset: 0; z-index: 30; background: rgb(10 12 16 / .5); display: grid; place-items: center; padding: 16px; }
+.app-modal { width: min(520px, 100%); background: var(--app-surface); color: var(--app-ink); border-radius: var(--app-radius); padding: 16px; display: grid; gap: 12px; box-shadow: 0 16px 40px rgb(0 0 0 / .3); }
+.app-modal > .hd { display: flex; justify-content: space-between; gap: 8px; align-items: center; font-weight: 700; font-size: 15px; }
+.app-drawer { position: absolute; top: 0; right: 0; bottom: 0; z-index: 30; width: min(380px, 100%); background: var(--app-surface); border-left: 1px solid var(--app-line); padding: 16px; display: grid; gap: 12px; align-content: start; box-shadow: -12px 0 32px rgb(0 0 0 / .15); }
+.app-empty { border: 1px dashed var(--app-line); border-radius: var(--app-radius); padding: 22px; text-align: center; color: var(--app-muted); display: grid; gap: 6px; }
+.app-alert { border-radius: var(--app-radius-sm); padding: 9px 12px; font-size: 12.5px; background: color-mix(in srgb, var(--app-warn) 13%, transparent); color: var(--app-ink); }
+.app .on-pick { background: var(--app-primary-soft); border-color: var(--app-primary); color: var(--app-primary); }
+@media (max-width: 760px) { .app { grid-template-columns: minmax(0, 1fr); } .app-side { display: none; } }
+.btp-frame.mobile .app { grid-template-columns: minmax(0, 1fr); min-height: 720px; }
+.btp-frame.mobile .app-side { display: none; }
+</style>
+
+<style id="app-theme">
+/* EDITAR: tokens do design system do cliente. A prévia é uma imagem do produto, então estes valores não mudam com o tema claro/escuro da página. */
+.btp-canvas {
+  --app-font: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --app-font-display: "Schibsted Grotesk", "Segoe UI", system-ui, sans-serif;
+  --app-bg: #f6f7f9;
+  --app-surface: #ffffff;
+  --app-ink: #1b1d22;
+  --app-muted: #69707d;
+  --app-line: #e3e6eb;
+  --app-primary: #2156c9;
+  --app-primary-ink: #ffffff;
+  --app-primary-soft: #e6edfb;
+  --app-side: #171a21;
+  --app-side-ink: #e8eaef;
+  --app-side-on: rgb(255 255 255 / .09);
+  --app-ok: #18804a;
+  --app-warn: #a86200;
+  --app-bad: #c0352b;
+  --app-radius: 10px;
+  --app-radius-sm: 7px;
+}
+</style>
+
+<style id="app-css">
+/* EDITAR (opcional): CSS de componentes específicos do projeto. Use só tokens --app-*. */
+.ex-steps { display: flex; gap: 6px; flex-wrap: wrap; }
+.ex-steps span { font-size: 11.5px; padding: 3px 9px; border-radius: 999px; background: var(--app-bg); color: var(--app-muted); }
+.ex-steps span.done { background: var(--app-primary-soft); color: var(--app-primary); font-weight: 600; }
+</style>
+
+<script type="application/json" id="btp-data">
+{
+  "exemplo": true,
+  "projeto": {
+    "nome": "Portal de Pedidos",
+    "cliente": "Distribuidora Exemplo",
+    "tipo": "novo",
+    "versao": 1,
+    "geradoEm": "2026-10-27",
+    "dominio": "app.exemplo.com.br",
+    "resumo": "Prévia das telas do portal em que o representante acompanha pedidos e o cliente aprova orçamentos. Cada parte da prévia marcada com borda tracejada aponta para a decisão que a justifica, com o trecho original logo abaixo.",
+    "historico": [
+      { "versao": 1, "data": "2026-10-27", "nota": "Primeira versão, a partir da reunião de kickoff e do documento de requisitos." }
+    ]
+  },
+  "fontes": [
+    { "id": "R1", "tipo": "reuniao", "titulo": "Kickoff Portal de Pedidos", "data": "2026-10-20", "detalhe": "Anotações do Gemini e gravação (32 min)", "link": "https://docs.google.com/document/d/EXEMPLO" },
+    { "id": "A1", "tipo": "documento", "titulo": "Requisitos do Portal v2", "data": "2026-10-18", "detalhe": "Google Docs, seção 3 (Pedidos)", "link": "https://docs.google.com/document/d/EXEMPLO2" },
+    { "id": "V1", "tipo": "design", "titulo": "Design system do cliente", "data": "2026-10-15", "detalhe": "Cores, tipografia e botões do site atual", "link": "https://exemplo.com.br" }
+  ],
+  "telas": [
+    { "id": "T01", "nome": "Pedidos", "rota": "/pedidos", "grupo": "Operação", "dispositivo": "desktop", "objetivo": "O representante vê, num só lugar, os pedidos que precisam de ação hoje.", "decisoes": ["D1"] },
+    { "id": "T02", "nome": "Detalhe do pedido", "rota": "/pedidos/4821", "grupo": "Operação", "dispositivo": "desktop", "objetivo": "Mostrar onde o pedido está e o que falta para ele andar.", "decisoes": [] }
+  ],
+  "decisoes": [
+    { "id": "D1", "tipo": "reuniao", "titulo": "Uma lista única de pedidos substitui as três abas atuais", "telas": ["T01"],
+      "explicacao": "Hoje o representante alterna entre três abas para achar o pedido. A lista única tem filtro de status no topo.",
+      "trechos": [ { "fonte": "R1", "ref": "04:12", "quem": "Cliente", "texto": "O cara perde tempo pulando de aba em aba, eu queria ver tudo numa lista só e filtrar." } ] },
+    { "id": "D2", "tipo": "documento", "titulo": "Pedido acima de R$ 50 mil pede aprovação do gerente", "telas": ["T01", "T02"],
+      "explicacao": "A regra vem do documento de requisitos. Na lista vira um status próprio; no detalhe, um passo a mais na linha do tempo.",
+      "trechos": [ { "fonte": "A1", "ref": "RN-07", "texto": "Pedidos com valor total superior a R$ 50.000,00 devem ser aprovados pelo gerente regional antes do faturamento." } ] },
+    { "id": "D3", "tipo": "referencia", "titulo": "Botão principal azul, com cantos levemente arredondados", "telas": ["T01"],
+      "explicacao": "Segue o botão primário do site atual do cliente.",
+      "trechos": [ { "fonte": "V1", "ref": "botão primário", "texto": "background #2156C9, raio 7px, texto branco 600." } ] },
+    { "id": "D4", "tipo": "inferencia", "titulo": "Atalho para repetir um pedido antigo", "telas": ["T02"],
+      "explicacao": "Nenhuma fonte pede isso. Foi proposto porque, na reunião, o cliente disse que 70% dos pedidos se repetem todo mês. Confirmar antes de desenvolver." },
+    { "id": "D5", "tipo": "aberto", "titulo": "Quem pode cancelar um pedido já aprovado?", "telas": ["T02"],
+      "explicacao": "A reunião não fechou se o representante pode cancelar sozinho ou se depende do gerente.",
+      "pergunta": "O representante cancela sozinho um pedido aprovado, ou o cancelamento volta para o gerente?",
+      "recomendacao": "Cancelamento volta para o gerente quando o pedido passou pela aprovação de R$ 50 mil.",
+      "quemDecide": "Cliente",
+      "trechos": [ { "fonte": "R1", "ref": "21:40", "quem": "Cliente", "texto": "Cancelar… aí depende, a gente vê isso depois." } ] }
+  ]
+}
+</script>
+
+<!-- EDITAR: trechos repetidos. Use com <div data-use="menu" data-active="pedidos"></div>; o item com data-item igual ganha a classe "on". -->
+<template data-shared="menu">
+  <aside class="app-side">
+    <div class="app-brand">Pedidos</div>
+    <nav class="app-nav">
+      <span class="lbl">Operação</span>
+      <a data-item="pedidos" data-goto="T01">Pedidos</a>
+      <a data-item="clientes" data-toast="Fora do escopo desta prévia">Clientes</a>
+      <a data-item="relatorios" data-toast="Fora do escopo desta prévia">Relatórios</a>
+    </nav>
+  </aside>
+</template>
+
+<!-- EDITAR: uma <template data-screen="Txx"> por tela. Não use id="" aqui dentro: a tela é montada duas vezes (documento e protótipo). -->
+<template data-screen="T01">
+  <div class="app">
+    <div data-use="menu" data-active="pedidos"></div>
+    <main class="app-main">
+      <div class="app-top">
+        <div><h4 class="app-h">Pedidos</h4><span class="app-sub">12 pedidos pedem ação hoje</span></div>
+        <div class="app-row"><button class="app-btn pri" data-d="D3" data-open="novo">+ Novo pedido</button></div>
+      </div>
+      <div class="app-row" data-d="D1">
+        <label class="app-field">Status
+          <select class="app-select" data-filter="status"><option value="">Todos</option><option>Em aprovação</option><option>Faturado</option><option>Aguardando cliente</option></select>
+        </label>
+        <label class="app-field">Buscar<input class="app-input" placeholder="Cliente ou número"></label>
+      </div>
+      <div class="app-table-wrap">
+        <table class="app-table">
+          <thead><tr><th>Pedido</th><th>Cliente</th><th class="num">Valor</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr data-goto="T02" data-status="Em aprovação"><td>#4821</td><td>Mercado Bom Preço</td><td class="num">R$ 62.400,00</td><td><span class="app-pill warn" data-d="D2">Em aprovação</span></td></tr>
+            <tr data-goto="T02" data-status="Faturado"><td>#4817</td><td>Rede Sol</td><td class="num">R$ 8.930,00</td><td><span class="app-pill ok">Faturado</span></td></tr>
+            <tr data-goto="T02" data-status="Aguardando cliente"><td>#4809</td><td>Empório Central</td><td class="num">R$ 3.215,50</td><td><span class="app-pill info">Aguardando cliente</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="app-overlay" data-panel="novo" hidden>
+        <form class="app-modal" data-toast-submit="Pedido criado (simulação)">
+          <div class="hd">Novo pedido <button type="button" class="app-btn ghost" data-close>Fechar</button></div>
+          <label class="app-field">Cliente<input class="app-input" value="Mercado Bom Preço"></label>
+          <label class="app-field">Valor estimado<input class="app-input" value="R$ 12.000,00"></label>
+          <div class="app-row" style="justify-content:flex-end"><button class="app-btn pri">Criar pedido</button></div>
+        </form>
+      </div>
+    </main>
+  </div>
+</template>
+
+<template data-screen="T02">
+  <div class="app">
+    <div data-use="menu" data-active="pedidos"></div>
+    <main class="app-main">
+      <div class="app-top">
+        <div><button class="app-btn ghost" data-goto="T01" data-goto-state="Em aprovação">← Pedidos em aprovação</button><h4 class="app-h">Pedido #4821 · Mercado Bom Preço</h4></div>
+        <div class="app-row">
+          <button class="app-btn" data-d="D4" data-toast="Pedido duplicado como rascunho (simulação)">Repetir pedido</button>
+          <button class="app-btn danger" data-d="D5" data-open="cancelar">Cancelar</button>
+        </div>
+      </div>
+      <div class="app-card">
+        <div class="hd">Andamento</div>
+        <div class="ex-steps" data-d="D2"><span class="done">Criado</span><span class="done">Aprovação do gerente</span><span>Faturamento</span><span>Entrega</span></div>
+      </div>
+      <div class="app-tabs" data-tabs>
+        <button aria-selected="true" data-tab="itens">Itens</button><button aria-selected="false" data-tab="hist">Histórico</button>
+      </div>
+      <div data-tabpane="itens" class="app-table-wrap"><table class="app-table"><tbody><tr><td>Arroz 5 kg</td><td class="num">400 un</td><td class="num">R$ 24.000,00</td></tr><tr><td>Feijão 1 kg</td><td class="num">1.200 un</td><td class="num">R$ 38.400,00</td></tr></tbody></table></div>
+      <div data-tabpane="hist" class="app-card" hidden>20/10 · Pedido criado por Ana · 21/10 · Enviado para aprovação</div>
+      <div class="app-overlay" data-panel="cancelar" hidden>
+        <div class="app-modal"><div class="hd">Cancelar pedido?</div><p style="margin:0">Este pedido já foi aprovado pelo gerente.</p>
+          <div class="app-row" style="justify-content:flex-end"><button class="app-btn" data-close>Voltar</button><button class="app-btn pri" data-close data-toast="Pedido cancelado (simulação)">Cancelar pedido</button></div></div>
+      </div>
+    </main>
+  </div>
+</template>
+
+<script id="app-js">
+/* EDITAR (opcional): interações que os atributos data-* não cobrem.
+   btpInit.Txx(root, api) roda a cada montagem da tela. Use root.querySelector, nunca document.getElementById.
+   api.goto("T02", estado), api.toast("texto"), api.view ("doc" ou "proto").
+   Quem chega por data-goto com data-goto-state="x" dispara root "btp:enter" com e.detail.state === "x". */
+window.btpInit = window.btpInit || {};
+btpInit.T01 = (root) => {
+  const sel = root.querySelector('[data-filter="status"]');
+  const aplicar = () => root.querySelectorAll("tbody tr[data-status]").forEach(tr => { tr.hidden = !!sel.value && tr.dataset.status !== sel.value; });
+  sel.addEventListener("change", aplicar);
+  root.addEventListener("btp:enter", e => { sel.value = e.detail.state || ""; aplicar(); });
+};
+</script>
+
+<div id="btp"></div>
+
+<script id="btp-engine">
+/* btime-preview engine v2. NÃO EDITAR: tudo que muda por projeto fica em btp-data, nos <template> e em app-js. */
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const root = $("#btp");
+  let data;
+  try { data = JSON.parse($("#btp-data").textContent); }
+  catch (e) { root.innerHTML = '<p class="btp-banner">O bloco btp-data não é um JSON válido: ' + String(e.message).replace(/</g, "&lt;") + '</p>'; return; }
+
+  const TIPOS = {
+    reuniao: ["Reunião", "Decidido ou pedido em reunião"],
+    documento: ["Documento", "Regra ou requisito escrito"],
+    referencia: ["Referência", "Design system, projeto de exemplo ou print"],
+    inferencia: ["Inferência", "Proposta da prévia, sem trecho que a peça"],
+    aberto: ["Em aberto", "Precisa de decisão antes de desenvolver"],
+  };
+  const FONTES = { reuniao: "Reunião", documento: "Documento", design: "Design system", url: "Projeto de referência", imagem: "Imagem", outro: "Outro" };
+  const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const fmt = s => esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/`(.+?)`/g, "<code>$1</code>");
+  const dia = iso => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ""); return m ? (+m[3]) + " " + MESES[+m[2] - 1] + " " + m[1] : esc(iso); };
+  const P = data.projeto || {};
+  const fontes = data.fontes || [], telas = data.telas || [], decisoes = data.decisoes || [];
+  const F = Object.fromEntries(fontes.map(f => [f.id, f]));
+  const D = Object.fromEntries(decisoes.map(d => [d.id, d]));
+  const tipo = d => (d && TIPOS[d.tipo]) ? d.tipo : "inferencia";
+  const decsDe = id => decisoes.filter(d => (d.telas || []).includes(id));
+  const nOrd = id => parseInt(String(id).replace(/\D/g, ""), 10) || 0;
+  window.btpInit = window.btpInit || {};
+
+  const trecho = t => {
+    const f = F[t.fonte] || {};
+    const href = t.link || f.link;
+    const ref = [t.fonte, t.ref].filter(Boolean).join(" · ");
+    return '<blockquote class="btp-q"><p>“' + esc(t.texto) + '”</p><footer>'
+      + (href ? '<a href="' + esc(href) + '" target="_blank" rel="noopener">' + esc(ref) + '</a>' : '<span class="btp-chip plain">' + esc(ref) + '</span>')
+      + (t.quem ? '<span>' + esc(t.quem) + '</span>' : '') + '<span>' + esc(f.titulo || "") + '</span></footer></blockquote>';
+  };
+  const cardHTML = (d, telaId) => {
+    const tp = tipo(d);
+    return '<article class="btp-dcard t-' + tp + '" data-dec="' + esc(d.id) + '">'
+      + '<header><span class="id">' + esc(d.id) + '</span><span class="tp">' + TIPOS[tp][0] + '</span>' + (d.mudanca ? '<span class="mu">' + ({ nova: "novo na tela", altera: "muda", remove: "sai da tela" }[d.mudanca] || esc(d.mudanca)) + '</span>' : '') + (d.novo ? '<span class="nv">novo</span>' : '') + '</header>'
+      + '<h3>' + fmt(d.titulo) + '</h3>'
+      + (d.explicacao ? '<p class="ex">' + fmt(d.explicacao) + '</p>' : '')
+      + (d.trechos || []).map(trecho).join("")
+      + (tp === "aberto" && (d.pergunta || d.recomendacao) ? '<div class="btp-open">' + (d.pergunta ? '<span><b>Pergunta:</b> ' + fmt(d.pergunta) + '</span>' : '') + (d.recomendacao ? '<span><b>Recomendação:</b> ' + fmt(d.recomendacao) + '</span>' : '') + (d.quemDecide ? '<span class="btp-muted">Quem decide: ' + esc(d.quemDecide) + '</span>' : '') + '</div>' : '')
+      + (telaId ? '<button type="button" class="btp-seeon" data-see="' + esc(d.id) + '">Ver na prévia ↑</button>' : '')
+      + '</article>';
+  };
+
+  /* ---------- Cabeçalho ---------- */
+  const cont = {}; decisoes.forEach(d => { cont[tipo(d)] = (cont[tipo(d)] || 0) + 1; });
+  let h = '';
+  if (data.exemplo) h += '<p class="btp-banner">Este é o conteúdo de exemplo do template da skill btime-preview. Substitua o bloco btp-data e os templates de tela pelos do projeto.</p>';
+  h += '<header class="btp-head">'
+    + '<span class="btp-eyebrow">btime-preview · v' + esc(P.versao || 1) + ' · ' + dia(P.geradoEm) + (P.cliente ? ' · ' + esc(P.cliente) : '') + ' · ' + (P.tipo === "refatoracao" ? "refatoração" : "projeto novo") + '</span>'
+    + '<h1>' + esc(P.nome) + '</h1>'
+    + (P.resumo ? '<p class="btp-lead">' + fmt(P.resumo) + '</p>' : '')
+    + '<div class="btp-stats"><span><b>' + telas.length + '</b>telas</span><span><b>' + decisoes.length + '</b>decisões</span><span><b>' + fontes.length + '</b>fontes</span>'
+    + '</div>'
+    + '<div class="btp-bar"><div class="btp-legend"><span>Marcações:</span>'
+    + Object.keys(TIPOS).filter(k => cont[k]).map(k => '<button type="button" class="btp-lg t-' + k + '" aria-pressed="true" data-type="' + k + '" title="' + TIPOS[k][1] + '"><i></i>' + TIPOS[k][0] + ' · ' + cont[k] + '</button>').join("")
+    + '<button type="button" class="btp-lg" aria-pressed="true" data-type="__all"><i></i>Todas</button></div>'
+    + '<div class="btp-switch" role="group" aria-label="Modo de leitura"><button type="button" aria-pressed="true" data-view="doc">Documento</button><button type="button" aria-pressed="false" data-view="proto">Protótipo</button></div></div>'
+    + '<nav class="btp-toc" aria-label="Telas">' + telas.map(t => '<a href="#' + esc(t.id) + '"><small>' + esc(t.id) + '</small>' + esc(t.nome) + '</a>').join("")
+    + '<a href="#fontes"><small>≡</small>Fontes</a></nav>'
+    + '</header>';
+  h += '<div data-pane="doc" class="btp-doc" style="display:grid;gap:28px"></div><div data-pane="proto" hidden></div>';
+  root.innerHTML = h;
+  const docPane = $('[data-pane="doc"]', root), protoPane = $('[data-pane="proto"]', root);
+  const so = /^#so-([A-Za-z0-9_-]+)$/.exec(location.hash);
+
+  /* ---------- Montagem de uma tela ---------- */
+  const mounts = [];
+  function mount(tela, view) {
+    const tpl = $('template[data-screen="' + tela.id + '"]');
+    const frame = document.createElement("div");
+    const why = (tela.decisoes || []).filter(id => D[id]);
+    frame.className = "btp-frame" + (tela.dispositivo === "mobile" ? " mobile" : "") + (why.length ? " screen-mark t-" + tipo(D[why[0]]) : "");
+    frame.innerHTML = '<div class="btp-chrome"><span class="dots"><i></i><i></i><i></i></span><span class="url">' + esc((P.dominio || "") + (tela.rota || "")) + '</span>'
+      + (why.length ? '<span class="why">tela criada por ' + why.map(id => '<button type="button" class="btp-badge t-' + tipo(D[id]) + '" data-dec="' + esc(id) + '" style="position:static">' + esc(id) + '</button>').join("") + '</span>' : '')
+      + '</div><div class="btp-stage"><div class="btp-canvas"></div></div>';
+    const canvas = $(".btp-canvas", frame), stage = $(".btp-stage", frame);
+    // larguraMinima: abaixo dela a moldura rola. Com "ajustar": true, a tela é desenhada nessa largura e encolhe
+    // para caber (como um print), útil quando o sistema real muda de layout em telas estreitas.
+    let zoomFit = null;
+    if (tela.larguraMinima && tela.ajustar && view !== "so") {
+      canvas.style.width = tela.larguraMinima + "px";
+      zoomFit = () => { const w = stage.clientWidth; if (w) canvas.style.zoom = Math.min(1, w / tela.larguraMinima); };
+      new ResizeObserver(() => { zoomFit(); schedule(); }).observe(stage);
+    } else if (tela.larguraMinima) canvas.style.setProperty("--btp-min", tela.larguraMinima + "px");
+    const host = document.createElement("div");
+    host.className = "btp-root";
+    if (tpl) host.append(tpl.content.cloneNode(true));
+    else host.innerHTML = '<p class="btp-banner" style="margin:16px">Falta o &lt;template data-screen="' + esc(tela.id) + '"&gt;.</p>';
+    $$("[data-use]", host).forEach(ph => {
+      const st = $('template[data-shared="' + ph.dataset.use + '"]');
+      if (!st) { ph.outerHTML = '<p class="btp-banner">Falta o template data-shared="' + esc(ph.dataset.use) + '".</p>'; return; }
+      const frag = st.content.cloneNode(true);
+      if (ph.dataset.active) $$("[data-item]", frag).forEach(el => el.classList.toggle("on", el.dataset.item === ph.dataset.active));
+      ph.replaceWith(frag);
+    });
+    canvas.append(host);
+    const layer = document.createElement("div"); layer.className = "btp-layer"; canvas.append(layer);
+    const items = $$("[data-d]", host).map(el => {
+      const ids = el.dataset.d.split(/\s+/).filter(Boolean);
+      el.classList.add("btp-mark", "t-" + tipo(D[ids[0]]));
+      const wrap = document.createElement("div"); wrap.className = "btp-badges";
+      ids.forEach(id => {
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "btp-badge t-" + tipo(D[id]); b.dataset.dec = id; b.textContent = id;
+        b.title = D[id] ? D[id].titulo : "Decisão " + id + " não existe em btp-data";
+        wrap.append(b);
+      });
+      layer.append(wrap);
+      return { el, wrap };
+    });
+    let raf = 0;
+    const place = () => {
+      raf = 0;
+      if (!frame.isConnected || frame.closest("[hidden]")) return;
+      const c = canvas.getBoundingClientRect();
+      const z = parseFloat(canvas.style.zoom) || 1;
+      items.forEach(({ el, wrap }) => {
+        const r = el.getBoundingClientRect();
+        const vis = el.getClientRects().length > 0 && r.width > 0 && !el.closest("[hidden]");
+        wrap.hidden = !vis;
+        if (vis) {
+          // getBoundingClientRect vem em px da tela; left/top dentro da tela encolhida são em px da tela original.
+          wrap.style.left = Math.max(wrap.offsetWidth + 2, Math.min((r.right - c.left) / z + 4, c.width / z - 2)) + "px";
+          wrap.style.top = Math.max(8, (r.top - c.top) / z) + "px";
+        }
+      });
+    };
+    const schedule = () => { if (!raf) raf = requestAnimationFrame(place); };
+    new ResizeObserver(schedule).observe(canvas);
+    new MutationObserver(schedule).observe(host, { subtree: true, childList: true, attributes: true, attributeFilter: ["hidden", "class", "style", "open"] });
+    stage.addEventListener("scroll", schedule, { passive: true });
+    const api = {
+      view,
+      goto: (id, state) => {
+        if (view !== "so") return go(id, view, state);
+        if (id === tela.id) host.dispatchEvent(new CustomEvent("btp:enter", { detail: { state: state ?? null } }));
+      },
+      toast: msg => {
+        let t = $(".btp-toast", frame);
+        if (!t) { t = document.createElement("div"); t.className = "btp-toast"; t.setAttribute("role", "status"); frame.querySelector(".btp-stage").append(t); }
+        t.textContent = msg; t.hidden = false; clearTimeout(t._h); t._h = setTimeout(() => { t.hidden = true; }, 2600);
+      },
+    };
+    wire(host, api);
+    try { if (typeof btpInit[tela.id] === "function") btpInit[tela.id](host, api); }
+    catch (e) { console.error("btpInit." + tela.id, e); }
+    const m = { tela, view, frame, host, schedule };
+    mounts.push(m);
+    schedule();
+    return frame;
+  }
+
+  /* Interações declarativas: data-goto, data-open/data-panel, data-close, data-tabs/data-tab/data-tabpane, data-pick, data-toast, data-toast-submit */
+  function wire(host, api) {
+    host.addEventListener("click", e => {
+      const el = e.target.closest("[data-goto],[data-open],[data-close],[data-tab],[data-pick],[data-toast]");
+      if (!el || !host.contains(el)) return;
+      if (el.matches("a")) e.preventDefault();
+      if (el.dataset.tab !== undefined) {
+        const g = el.closest("[data-tabs]");
+        if (g) {
+          $$("[data-tab]", g).forEach(b => b.setAttribute("aria-selected", String(b === el)));
+          // Os painéis podem estar fora do bloco das abas (abas no cabeçalho, painéis abaixo): sobe até achá-los.
+          let scope = g.parentElement;
+          while (scope && scope !== host && !scope.querySelector("[data-tabpane]")) scope = scope.parentElement;
+          scope = scope || host;
+          $$("[data-tabpane]", scope).forEach(p => { p.hidden = p.dataset.tabpane !== el.dataset.tab; });
+        }
+      }
+      if (el.dataset.pick !== undefined) {
+        const g = el.closest("[data-pick-group]") || el.parentElement;
+        $$("[data-pick]", g).forEach(b => b.classList.toggle("on-pick", b === el));
+      }
+      if (el.dataset.open) {
+        const p = $('[data-panel="' + el.dataset.open + '"]', host);
+        if (p) { p.hidden = !p.hidden; if (!p.hidden) { const f = $("input,select,textarea,button", p); if (f) f.focus({ preventScroll: true }); } }
+      }
+      if (el.dataset.close !== undefined) { const p = el.closest("[data-panel]"); if (p) p.hidden = true; }
+      if (el.dataset.toast) api.toast(el.dataset.toast);
+      if (el.dataset.goto) api.goto(el.dataset.goto, el.dataset.gotoState);
+    });
+    host.addEventListener("click", e => { if (e.target.matches(".app-overlay[data-panel]")) e.target.hidden = true; });
+    host.addEventListener("keydown", e => {
+      if (e.key === "Escape") $$("[data-panel]", host).forEach(p => { p.hidden = true; });
+      if ((e.key === "Enter" || e.key === " ") && e.target.matches("tr[data-goto],tr[data-open]")) { e.preventDefault(); e.target.click(); }
+    });
+    $$("tr[data-goto],tr[data-open]", host).forEach(tr => { tr.tabIndex = 0; });
+    host.addEventListener("submit", e => { e.preventDefault(); const f = e.target; const p = f.closest("[data-panel]"); if (p) p.hidden = true; api.toast(f.dataset.toastSubmit || "Enviado (simulação)"); });
+  }
+
+  /* Captura de uma tela só (#so-T01), sem marcações: o capturar.mjs usa para o print de "como vai ficar". */
+  if (so) {
+    const t = telas.find(x => x.id === so[1]);
+    document.body.classList.add("btp-so", "btp-nomarks");
+    root.innerHTML = "";
+    if (t) root.append(mount(t, "so"));
+    return;
+  }
+
+  /* ---------- Modo documento ---------- */
+  telas.forEach(tela => {
+    const sec = document.createElement("section");
+    sec.className = "btp-screen"; sec.id = tela.id; sec.dataset.screen = tela.id;
+    const ds = decsDe(tela.id).sort((a, b) => nOrd(a.id) - nOrd(b.id));
+    const hoje = tela.hoje || [], depois = tela.depois || [];
+    const fig = (x, alt) => '<figure><img src="' + esc(x.img) + '" alt="' + esc(x.legenda || alt) + '" loading="lazy">'
+      + '<figcaption>' + (x.fonte ? '<span class="btp-chip plain">' + esc([x.fonte, x.ref].filter(Boolean).join(" · ")) + '</span>' : '') + esc(x.legenda || "") + '</figcaption></figure>';
+    const imgA = hoje.find(x => x.img), imgD = depois.find(x => x.img);
+    const comparar = !!(imgA && imgD);
+    sec.innerHTML = '<div class="btp-screen-head"><div class="t"><div><span class="btp-chip plain">' + esc(tela.id) + '</span>' + (tela.grupo ? '<span class="btp-eyebrow">' + esc(tela.grupo) + '</span>' : '') + '</div><h2>' + esc(tela.nome) + '</h2>'
+      + (tela.objetivo ? '<p class="btp-muted" style="max-width:80ch">' + fmt(tela.objetivo) + '</p>' : '')
+      + (!hoje.length && tela.hojeAviso ? '<p class="btp-nohoje">Sem imagem do sistema atual: ' + fmt(tela.hojeAviso) + '</p>' : '') + '</div>'
+      + (hoje.length ? '<div class="btp-tabs" role="tablist"><button role="tab" aria-selected="true" data-tabv="new">Como vai ficar</button><button role="tab" aria-selected="false" data-tabv="old">Como está hoje</button>' + (comparar ? '<button role="tab" aria-selected="false" data-tabv="cmp">Antes e depois</button>' : '') + '</div>' : '')
+      + '</div><div data-v="new"></div>'
+      + (hoje.length ? '<div data-v="old" hidden><div class="btp-frame"><div class="btp-hoje">' + hoje.map(x => fig(x, "Tela atual: " + tela.nome)).join("") + '</div></div></div>' : '')
+      + (comparar ? '<div data-v="cmp" hidden><div class="btp-frame"><div class="btp-hoje">'
+        + ('<div class="btp-cmp"><img src="' + esc(imgA.img) + '" alt="Hoje: ' + esc(tela.nome) + '"><div class="depois"><img src="' + esc(imgD.img) + '" alt="Como vai ficar: ' + esc(tela.nome) + '"></div><span class="linha"></span><span class="rot a">Hoje</span><span class="rot d">Como vai ficar</span>'
+          + '<input type="range" min="0" max="100" value="50" aria-label="Arraste para comparar hoje e como vai ficar"></div><p class="btp-muted" style="font-size:.86rem">Arraste a linha para comparar.</p>')
+        + '</div></div></div>' : '')
+      + (ds.length ? '<div class="btp-decs">' + ds.map(d => cardHTML(d, tela.id)).join("") + '</div>' : '<p class="btp-muted">Nenhuma decisão ligada a esta tela.</p>');
+    $('[data-v="new"]', sec).append(mount(tela, "doc"));
+    docPane.append(sec);
+  });
+
+  /* Fontes */
+  const fs = document.createElement("section"); fs.className = "btp-panel"; fs.id = "fontes";
+  fs.innerHTML = '<h2>Fontes</h2><p class="btp-lead">Tudo o que a prévia usou. Os trechos citados nas decisões são cópia literal destas fontes; transcrições automáticas podem ter erros de reconhecimento.</p><div class="btp-list">'
+    + fontes.map(f => {
+      const usos = decisoes.filter(d => (d.trechos || []).some(t => t.fonte === f.id));
+      return '<div class="btp-src"><span class="btp-chip plain">' + esc(f.id) + '</span><div><b>' + (f.link ? '<a href="' + esc(f.link) + '" target="_blank" rel="noopener">' + esc(f.titulo) + '</a>' : esc(f.titulo)) + '</b>'
+        + '<p class="meta">' + [FONTES[f.tipo] || esc(f.tipo), f.data ? dia(f.data) : "", esc(f.detalhe || "")].filter(Boolean).join(" · ") + '</p>'
+        + (usos.length ? '<div class="uses">' + usos.map(d => '<a href="#' + esc((d.telas || [])[0] || "") + '" data-jump="' + esc(d.id) + '" class="btp-chip t-' + tipo(d) + '">' + esc(d.id) + '</a>').join("") + '</div>' : '<p class="meta">Contexto geral, sem trecho citado.</p>')
+        + '</div></div>';
+    }).join("") + '</div>'
+    + ((P.historico || []).length ? '<details class="btp-hist"><summary>Histórico de versões</summary><ul>' + P.historico.map(v => '<li><b>v' + esc(v.versao) + '</b> · ' + dia(v.data) + ' · ' + fmt(v.nota) + '</li>').join("") + '</ul></details>' : '');
+  docPane.append(fs);
+  const foot = document.createElement("p"); foot.className = "btp-foot"; foot.textContent = "Gerado com a skill btime-preview";
+  root.append(foot);
+
+  /* ---------- Modo protótipo ---------- */
+  let protoBuilt = false, protoAtual = null;
+  function buildProto() {
+    protoBuilt = true;
+    protoPane.innerHTML = '<div class="btp-proto"><nav class="btp-pnav" aria-label="Telas do protótipo">'
+      + telas.map(t => '<button type="button" data-pgo="' + esc(t.id) + '"><small>' + esc(t.id) + (t.grupo ? ' · ' + esc(t.grupo) : '') + '</small>' + esc(t.nome) + '</button>').join("")
+      + '</nav><div class="btp-pstage" style="position:relative;min-width:0"></div></div>';
+    const st = $(".btp-pstage", protoPane);
+    telas.forEach(t => { const w = document.createElement("div"); w.dataset.pscreen = t.id; w.hidden = true; w.append(mount(t, "proto")); st.append(w); });
+    $$("[data-pgo]", protoPane).forEach(b => b.addEventListener("click", () => showProto(b.dataset.pgo)));
+  }
+  function showProto(id) {
+    if (!protoBuilt) buildProto();
+    protoAtual = id;
+    $$("[data-pscreen]", protoPane).forEach(w => { w.hidden = w.dataset.pscreen !== id; });
+    $$("[data-pgo]", protoPane).forEach(b => { if (b.dataset.pgo === id) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
+    closePop();
+    mounts.forEach(m => m.schedule());
+  }
+  function setView(v) {
+    $$("[data-view]", root).forEach(b => b.setAttribute("aria-pressed", String(b.dataset.view === v)));
+    docPane.hidden = v !== "doc"; protoPane.hidden = v !== "proto";
+    $(".btp-toc", root).hidden = v !== "doc";
+    if (v === "proto") showProto(protoAtual || (telas[0] && telas[0].id));
+    try { localStorage.setItem("btp-view", v); } catch (e) {}
+    mounts.forEach(m => m.schedule());
+  }
+  function go(id, view, state) {
+    if (!telas.some(t => t.id === id)) return;
+    const enter = () => mounts.filter(m => m.tela.id === id && m.view === view)
+      .forEach(m => m.host.dispatchEvent(new CustomEvent("btp:enter", { detail: { state: state ?? null } })));
+    if (view === "proto") { showProto(id); enter(); protoPane.scrollIntoView({ block: "start", behavior: "smooth" }); return; }
+    const sec = document.getElementById(id);
+    if (sec) { sec.scrollIntoView({ block: "start", behavior: "smooth" }); flash(sec); }
+    enter();
+  }
+  const flash = el => { el.classList.remove("btp-flash"); void el.offsetWidth; el.classList.add("btp-flash"); setTimeout(() => el.classList.remove("btp-flash"), 2600); };
+
+  /* ---------- Ligação marcação ↔ decisão ---------- */
+  const hot = (id, on) => {
+    $$('[data-d~="' + CSS.escape(id) + '"]', root).forEach(el => el.classList.toggle("is-hot", on));
+    $$('.btp-badge[data-dec="' + CSS.escape(id) + '"]', root).forEach(el => el.classList.toggle("is-hot", on));
+  };
+  root.addEventListener("input", e => { const r = e.target.closest(".btp-cmp input[type=range]"); if (r) r.parentElement.style.setProperty("--x", r.value + "%"); });
+  docPane.addEventListener("mouseover", e => { const c = e.target.closest(".btp-dcard"); if (c && !c.contains(e.relatedTarget)) { hot(c.dataset.dec, true); c.classList.add("is-hot"); } });
+  docPane.addEventListener("mouseout", e => { const c = e.target.closest(".btp-dcard"); if (c && !c.contains(e.relatedTarget)) { hot(c.dataset.dec, false); c.classList.remove("is-hot"); } });
+  docPane.addEventListener("focusin", e => { const c = e.target.closest(".btp-dcard"); if (c) hot(c.dataset.dec, true); });
+  docPane.addEventListener("focusout", e => { const c = e.target.closest(".btp-dcard"); if (c) hot(c.dataset.dec, false); });
+
+  let pop = null;
+  function closePop() { if (pop) { pop.remove(); pop = null; } }
+  function openPop(badge) {
+    closePop();
+    const d = D[badge.dataset.dec]; if (!d) return;
+    const stage = badge.closest(".btp-pstage"); if (!stage) return;
+    pop = document.createElement("div");
+    pop.className = "btp-pop t-" + tipo(d); pop.setAttribute("role", "dialog"); pop.setAttribute("aria-label", d.id + " " + d.titulo);
+    pop.innerHTML = '<button type="button" class="x" aria-label="Fechar">✕</button>' + cardHTML(d, null).replace('class="btp-dcard', 'style="border:0;padding:0;background:none" class="btp-dcard')
+      + '<button type="button" class="btp-seeon" data-doc="' + esc(d.id) + '">Ver no documento →</button>';
+    const s = stage.getBoundingClientRect(), b = badge.getBoundingClientRect();
+    pop.style.top = (b.bottom - s.top + 8) + "px";
+    pop.style.left = Math.max(8, Math.min(b.right - s.left - 360, s.width - 372)) + "px";
+    stage.append(pop);
+    $(".x", pop).addEventListener("click", closePop);
+    $("[data-doc]", pop).addEventListener("click", () => { const id = d.id; closePop(); setView("doc"); jump(id); });
+    $(".x", pop).focus();
+  }
+  function jump(id, fromScreen) {
+    const sec = fromScreen ? document.getElementById(fromScreen) : null;
+    const card = (sec && $('.btp-dcard[data-dec="' + CSS.escape(id) + '"]', sec)) || $('.btp-dcard[data-dec="' + CSS.escape(id) + '"]', docPane);
+    if (card) { card.scrollIntoView({ block: "center", behavior: "smooth" }); flash(card); }
+  }
+  root.addEventListener("click", e => {
+    const b = e.target.closest(".btp-badge");
+    if (b) {
+      e.preventDefault(); e.stopPropagation();
+      if (b.closest('[data-pane="proto"]')) openPop(b);
+      else jump(b.dataset.dec, b.closest(".btp-screen")?.dataset.screen);
+      return;
+    }
+    const see = e.target.closest("[data-see]");
+    if (see) {
+      const sec = see.closest(".btp-screen");
+      const el = sec && $('[data-d~="' + CSS.escape(see.dataset.see) + '"]', sec);
+      const target = el || (sec && $(".btp-frame", sec));
+      if (target) { target.scrollIntoView({ block: "center", behavior: "smooth" }); hot(see.dataset.see, true); setTimeout(() => hot(see.dataset.see, false), 1800); }
+      return;
+    }
+    const j = e.target.closest("[data-jump]");
+    if (j) { e.preventDefault(); jump(j.dataset.jump, j.getAttribute("href").slice(1)); return; }
+    const tb = e.target.closest("[data-tabv]");
+    if (tb) {
+      const sec = tb.closest(".btp-screen");
+      $$("[data-tabv]", sec).forEach(x => x.setAttribute("aria-selected", String(x === tb)));
+      $$("[data-v]", sec).forEach(p => { p.hidden = p.dataset.v !== tb.dataset.tabv; });
+      mounts.forEach(m => m.schedule());
+      return;
+    }
+    const lg = e.target.closest(".btp-lg");
+    if (lg) {
+      const on = lg.getAttribute("aria-pressed") !== "true";
+      if (lg.dataset.type === "__all") {
+        document.body.classList.toggle("btp-nomarks", !on);
+        $$(".btp-lg", root).forEach(x => x.setAttribute("aria-pressed", String(on)));
+        Object.keys(TIPOS).forEach(k => document.body.classList.remove("off-" + k));
+      } else {
+        lg.setAttribute("aria-pressed", String(on));
+        document.body.classList.toggle("off-" + lg.dataset.type, !on);
+      }
+      return;
+    }
+    const v = e.target.closest("[data-view]");
+    if (v) { setView(v.dataset.view); return; }
+    if (pop && !pop.contains(e.target)) closePop();
+  });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closePop(); });
+  window.addEventListener("resize", () => mounts.forEach(m => m.schedule()));
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => mounts.forEach(m => m.schedule()));
+
+  let v0 = "doc"; try { v0 = localStorage.getItem("btp-view") || "doc"; } catch (e) {}
+  const hash = decodeURIComponent(location.hash.slice(1));
+  if (hash === "prototipo") v0 = "proto";
+  setView(v0);
+  if (telas.some(t => t.id === hash)) setTimeout(() => go(hash, v0), 60);
+})();
+</script>
