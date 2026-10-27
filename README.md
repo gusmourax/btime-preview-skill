@@ -30,12 +30,12 @@ Mais detalhes em [docs/como-funciona.md](docs/como-funciona.md). Exemplos e quan
 A pasta deste repositório é a própria skill. Clone dentro das skills do usuário:
 
 ```bash
-git clone <url-deste-repositorio> ~/.claude/skills/btime-preview
+git clone https://github.com/gusmourax/btime-preview-skill.git ~/.claude/skills/btime-preview
 ```
 
-No Windows: `git clone <url> "%USERPROFILE%\.claude\skills\btime-preview"`.
+No Windows: `git clone https://github.com/gusmourax/btime-preview-skill.git "%USERPROFILE%\.claude\skills\btime-preview"`.
 
-Abra uma sessão nova do Claude Code; a skill aparece como `btime-preview`. Para atualizar, rode `git pull` nessa pasta.
+O nome da pasta de destino precisa ser `btime-preview`, o mesmo do `name` no `SKILL.md`. Abra uma sessão nova do Claude Code; a skill aparece como `btime-preview`. Para atualizar, rode `git pull` nessa pasta.
 
 ### Requisitos
 
