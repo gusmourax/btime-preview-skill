@@ -63,6 +63,11 @@ Edite cada bloco com substituições exatas (Edit) do conteúdo de dentro do blo
       "depois": [ { "img": "depois/t01.png" } ], // print da prévia (teste.html#so-T01); com hoje, cria a aba "Antes e depois"
       "hojeAviso": "opcional: por que não há imagem do sistema atual (aparece sob o objetivo)" }
   ],
+  // Só quando telas mudam de lugar, se juntam, se dividem ou saem (seção 2.1):
+  "telasAtuais": [ { "nome": "Conciliação", "local": "Menu" }, { "nome": "Relatórios", "local": "Menu", "igual": true } ],
+  "removidas": [ { "id": "X1", "nome": "Alertas", "local": "Menu › Alertas", "rota": "/alertas",
+      "hoje": [ { "img": "hoje/x1-alertas.png", "fonte": "V1" } ],
+      "destino": "Para onde vai o que ela fazia (aceita **negrito**).", "para": ["T01"] } ],
   "decisoes": [
     { "id": "D1", "tipo": "reuniao", "titulo": "Frase curta com o que foi decidido",
       "mudanca": "altera",                     // opcional, em sistema existente: "altera" | "nova" | "remove"
@@ -90,6 +95,22 @@ Regras que o validador confere:
 - Imagens são arquivos locais (caminho relativo ao `preview.html`: `img/`, `hoje/`, `depois/`); o `validate.py --out` embute todas na versão de publicação. URL externa não carrega no artefato. Vídeo não entra: pesa demais na página, e o validador recusa.
 - `mudanca`, quando houver, é `altera`, `nova` ou `remove`.
 - O motor tem um modo de captura: `teste.html#so-T01` mostra só a tela T01, sem marcações e sem moldura, na largura da janela. É dele que saem os prints de `depois`.
+
+### 2.1 Reorganização: telas que mudam de lugar, se juntam, se dividem ou saem
+
+Quando o pedido mexe na estrutura de telas, e não só dentro delas, a prévia ganha um **Mapa das telas** no início (hoje à esquerda, como vai ficar à direita, uma seta com o tipo de mudança e a decisão que pediu), uma linha de origem no topo de cada ficha e uma ficha curta para cada tela que sai. Os campos:
+
+| Campo | Onde | O que faz |
+|---|---|---|
+| `situacao` | tela | `nova` (não existe hoje), `ajustada` (padrão quando há `hoje`: muda só por dentro), `movida` (muda de lugar no menu ou de endereço), `mesclada` (junta duas ou mais telas de hoje), `dividida` (uma tela de hoje vira várias). |
+| `local` | tela | Onde a tela fica na navegação nova (`"Atendimento › Pacientes"`). Sem ele, o motor usa `grupo › nome`. |
+| `hoje[].tela`, `hoje[].local` | tela | De qual tela de hoje vem aquele print, e onde ela fica hoje. É o que liga as telas no mapa: uma `mesclada` tem prints de duas ou mais telas; as telas de uma `dividida` citam a mesma tela de origem (com o mesmo `local`). |
+| `depois[i]` | tela | Na aba Antes e depois, o print `hoje[i]` se compara com `depois[i]` (ou com `depois[0]`, se faltar). Com mais de um print de hoje, aparece "Comparar com" para escolher. Numa `mesclada`, ponha os prints de depois na mesma ordem dos de hoje (ex.: aba Saldos ↔ Movimentações, aba Histórico ↔ Auditoria). |
+| `decisoes` | tela | A decisão que pediu a mudança de estrutura. Aparece no badge da linha do mapa. |
+| `removidas[]` | raiz | Telas que saem do sistema, com ids `X1`, `X2`... Cada uma tem `nome`, `local`, `rota`, `hoje` (o print de como é hoje) ou `hojeAviso`, `destino` (texto) e `para` (ids das telas que herdam o que ela fazia). A decisão que a tira cita o id em `telas` (`"telas": ["X1"]`, com `"mudanca": "remove"`), e o card aparece na ficha dela. |
+| `telasAtuais[]` | raiz | O menu de hoje, para conferir se nenhuma tela some sem explicação. Cada item é um nome (`"Cadastros"`) ou `{ "nome", "local", "igual": true }`. As que não aparecem em nenhum `hoje[].tela` nem em `removidas` entram no mapa como "continua igual" (com `igual: true`) ou "fora desta prévia" (sem), e o validador avisa. |
+
+O validador também confere: `mesclada` com pelo menos duas telas de origem; `movida` e `dividida` com `hoje[].tela`; `dividida` sem outra tela vinda da mesma origem (talvez seja `movida`); tela removida sem decisão que a cite (erro); e reorganização sem `telasAtuais` (aviso).
 
 ## 3. Telas
 
@@ -176,3 +197,4 @@ Logotipo: se houver arquivo, copie para `WORK/img/logo.png` e use `<img src="img
 - [ ] Dados fictícios, sem dado pessoal real.
 - [ ] Em refatoração, cada tela tem "Como está hoje" ou `hojeAviso` dizendo por que não tem.
 - [ ] Em sistema existente, só o que muda tem `data-d`, cada mudança tem `mudanca`, e `hoje`/`depois` foram capturados na mesma largura.
+- [ ] Se telas mudam de lugar, se juntam, se dividem ou saem: `situacao` em cada tela, `hoje[].tela` nas origens, `removidas` com a decisão que as tira e `telasAtuais` com o menu de hoje, sem tela atual sem destino.

@@ -29,7 +29,8 @@ except Exception:
 
 TIPOS_DEC = {"reuniao", "documento", "referencia", "inferencia", "aberto"}
 MUDANCAS = {"nova", "altera", "remove"}
-MOTOR_ATUAL = 2
+SITUACOES = {"nova", "ajustada", "movida", "mesclada", "dividida"}
+MOTOR_ATUAL = 3
 TIPOS_FONTE = {"reuniao", "documento", "design", "url", "imagem", "outro"}
 CDNS = ("https://cdnjs.cloudflare.com/", "https://cdn.jsdelivr.net/npm/", "https://unpkg.com/",
         "https://cdn.tailwindcss.com", "https://code.jquery.com/")
@@ -113,7 +114,12 @@ def main() -> int:
             vistos.add(i)
         return vistos
 
+    removidas = data.get("removidas") or []
+    atuais = data.get("telasAtuais") or []
     F, T, D = ids(fontes, "fonte"), ids(telas, "tela"), ids(decs, "decisão")
+    X = ids(removidas, "tela removida")
+    for x in X & T:
+        erros.append(f"Id {x} usado por uma tela e por uma tela removida. Use X1, X2... para as que saem.")
     for f in fontes:
         if f.get("tipo") not in TIPOS_FONTE:
             erros.append(f"Fonte {f.get('id')}: tipo '{f.get('tipo')}' inválido ({', '.join(sorted(TIPOS_FONTE))}).")
@@ -163,8 +169,55 @@ def main() -> int:
                     erros.append(f"Tela {tid}: item de '{chave}' sem 'img'.")
         if not any(tid in (d.get("telas") or []) for d in decs) and not tela.get("decisoes"):
             avisos.append(f"Tela {tid} ({tela.get('nome')}) não tem nenhuma decisão que explique por que existe.")
-        if P.get("tipo") == "refatoracao" and not tela.get("hoje") and not tela.get("hojeAviso"):
-            avisos.append(f"Tela {tid}: refatoração sem imagem 'Como está hoje' nem 'hojeAviso' explicando a falta.")
+        if P.get("tipo") == "refatoracao" and not tela.get("hoje") and not tela.get("hojeAviso") and tela.get("situacao") != "nova":
+            avisos.append(f"Tela {tid}: refatoração sem imagem 'Como está hoje' nem 'hojeAviso' explicando a falta (ou situacao \"nova\").")
+        sit = tela.get("situacao")
+        orig = list(dict.fromkeys(h.get("tela") for h in tela.get("hoje") or [] if h.get("tela")))
+        if sit and sit not in SITUACOES:
+            erros.append(f"Tela {tid}: situacao '{sit}' inválida ({', '.join(sorted(SITUACOES))}).")
+        if sit == "mesclada" and len(orig) < 2:
+            erros.append(f"Tela {tid}: 'mesclada' precisa de pelo menos duas telas de hoje em hoje[].tela (achei {len(orig)}).")
+        if sit in ("movida", "dividida") and not orig:
+            erros.append(f"Tela {tid}: '{sit}' precisa dizer de qual tela vem, em hoje[].tela.")
+        if sit == "movida" and not any(h.get("local") for h in tela.get("hoje") or []):
+            avisos.append(f"Tela {tid}: 'movida' sem hoje[].local. O leitor não vê onde a tela ficava.")
+        if sit in ("movida", "mesclada", "dividida") and not tela.get("decisoes"):
+            avisos.append(f"Tela {tid}: '{sit}' sem decisão de tela (tela.decisoes). O mapa mostra a mudança sem dizer quem pediu.")
+        if sit == "dividida" and orig and not any(o is not tela and o.get("situacao") == "dividida"
+                                                  and orig[0] in [h.get("tela") for h in o.get("hoje") or []] for o in telas):
+            avisos.append(f"Tela {tid}: 'dividida' de {orig[0]}, mas nenhuma outra tela vem dela. Talvez seja 'movida' ou 'ajustada'.")
+
+    for r in removidas:
+        rid = r.get("id")
+        if not r.get("nome"):
+            erros.append(f"Tela removida {rid} sem nome.")
+        for h in r.get("hoje") or []:
+            if not h.get("img"):
+                erros.append(f"Tela removida {rid}: item de 'hoje' sem 'img'.")
+            if h.get("fonte") and h["fonte"] not in F:
+                erros.append(f"Tela removida {rid}: mídia cita fonte inexistente {h['fonte']}.")
+        if not r.get("hoje") and not r.get("hojeAviso"):
+            avisos.append(f"Tela removida {rid}: sem print de hoje nem 'hojeAviso'.")
+        for p in r.get("para") or []:
+            if p not in T:
+                erros.append(f"Tela removida {rid}: 'para' aponta para tela inexistente {p}.")
+        if not r.get("destino") and not r.get("para"):
+            avisos.append(f"Tela removida {rid}: sem 'destino' nem 'para'. Diga para onde vai o que ela fazia, ou que sai sem substituta.")
+        if not any(rid in (d.get("telas") or []) for d in decs):
+            erros.append(f"Tela removida {rid} ({r.get('nome')}): nenhuma decisão a cita em 'telas'. Toda tela que sai precisa da decisão que a tira.")
+
+    # Cada tela de hoje precisa ter destino: uma tela nova que vem dela, uma removida ou "igual": true.
+    if atuais:
+        cobertas = {h.get("tela") or t.get("nome") for t in telas for h in t.get("hoje") or []}
+        cobertas |= {t.get("nome") for t in telas if t.get("hojeAviso") and t.get("situacao") != "nova"}
+        cobertas |= {r.get("nome") for r in removidas}
+        for a in atuais:
+            a = {"nome": a} if isinstance(a, str) else a
+            if not a.get("igual") and a.get("nome") not in cobertas:
+                avisos.append(f"Tela atual '{a.get('nome')}' sem destino na prévia: nenhuma tela vem dela (hoje[].tela), não está em removidas "
+                              f"e não tem \"igual\": true. Ela aparece no mapa como \"fora desta prévia\".")
+    elif removidas or any(t.get("situacao") in ("movida", "mesclada", "dividida") for t in telas):
+        avisos.append("Há reorganização de telas, mas falta 'telasAtuais' (o menu de hoje). Sem ele não dá para conferir se alguma tela atual ficou sem destino.")
 
     for d in decs:
         did, tp = d.get("id", "?"), d.get("tipo")
@@ -173,7 +226,7 @@ def main() -> int:
         if not d.get("titulo"):
             erros.append(f"{did}: sem título.")
         for tid in d.get("telas") or []:
-            if tid not in T:
+            if tid not in T and tid not in X:
                 erros.append(f"{did}: tela '{tid}' não existe.")
         if not d.get("telas"):
             avisos.append(f"{did}: sem telas. Não aparece em nenhuma ficha.")
@@ -191,7 +244,7 @@ def main() -> int:
             erros.append(f"{did}: mudanca '{d['mudanca']}' inválida ({', '.join(sorted(MUDANCAS))}).")
         if tp == "aberto" and not d.get("pergunta"):
             erros.append(f"{did}: ponto em aberto precisa de 'pergunta'.")
-        if did not in marcadas:
+        if did not in marcadas and not any(t in X for t in d.get("telas") or []):
             avisos.append(f"{did}: não está marcada em nenhuma prévia (data-d) nem como decisão de tela.")
 
     for src in re.findall(r'<script[^>]+src="([^"]+)"', html):
@@ -201,7 +254,7 @@ def main() -> int:
             erros.append(f"Fixe a versão exata do script: {src}")
 
     imgs: set[str] = set()
-    for tela in telas:
+    for tela in telas + removidas:
         for h in (tela.get("hoje") or []) + (tela.get("depois") or []):
             imgs.update([h["img"]] if h.get("img") else [])
     for body in list(screens.values()) + list(shared.values()):
@@ -236,7 +289,8 @@ def main() -> int:
     tipos: dict[str, int] = {}
     for d in decs:
         tipos[str(d.get("tipo"))] = tipos.get(str(d.get("tipo")), 0) + 1
-    print(f"Prévia: {P.get('nome')} · v{P.get('versao', 1)} · {len(telas)} telas · {len(decs)} decisões · {len(fontes)} fontes · {len(locais)} imagens")
+    print(f"Prévia: {P.get('nome')} · v{P.get('versao', 1)} · {len(telas)} telas"
+          + (f" (+{len(removidas)} saem)" if removidas else "") + f" · {len(decs)} decisões · {len(fontes)} fontes · {len(locais)} imagens")
     print("Decisões por tipo: " + ", ".join(f"{k}={v}" for k, v in sorted(tipos.items())))
     if tipos.get("inferencia", 0) > max(3, len(decs) // 3):
         avisos.append("Mais de um terço das decisões são inferências. Procure trechos nas fontes ou marque como 'aberto' com a pergunta.")

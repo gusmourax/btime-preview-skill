@@ -20,7 +20,7 @@ O documento é feito para validação com a liderança interna ou com o cliente 
   | `aberto` | precisa de decisão; a prévia mostra uma suposição |
 
 - **Monta as telas** num template fixo, que é sempre igual de um projeto para outro, com modo documento (tela + decisões) e modo protótipo (navegação, abas, janelas, filtros).
-- **Em sistema que já existe**, captura o sistema rodando localmente e mostra cada tela em três abas: **Como vai ficar**, **Como está hoje** e **Antes e depois** (linha deslizante sobre os dois prints). Só o que foi pedido muda.
+- **Em sistema que já existe**, captura o sistema rodando localmente e mostra cada tela em três abas: **Como vai ficar**, **Como está hoje** e **Antes e depois** (linha deslizante sobre os dois prints). Só o que foi pedido muda. Quando telas mudam de lugar, se juntam, se dividem ou saem, a prévia abre com um **Mapa das telas** (o menu de hoje à esquerda, o novo à direita, com a decisão de cada mudança) e cada tela que sai ganha uma ficha própria.
 - **Valida e publica** o Artifact (privado), e na reunião seguinte atualiza o mesmo link.
 
 Mais detalhes em [docs/como-funciona.md](docs/como-funciona.md). Exemplos e quando vale a pena usar estão em [docs/exemplos-de-uso.md](docs/exemplos-de-uso.md).
@@ -72,7 +72,7 @@ references/
   artefato.md            contrato do template: blocos, btp-data, marcações, kit de componentes
   existente.md           caminho para sistema que já roda: captura, CSS real, antes e depois
 assets/
-  template.html          template do artefato com o motor (btp-shell + btp-engine, versão 2)
+  template.html          template do artefato com o motor (btp-shell + btp-engine, versão 3)
 scripts/
   check_env.py           confere conectores, Python, ffmpeg, Node e navegador
   frames.py              extrai quadros da gravação por horário ou por troca de tela

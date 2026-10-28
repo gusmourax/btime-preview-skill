@@ -28,11 +28,17 @@ A prévia é o **sistema real**: HTML e CSS capturados localmente, com só o que
 
 A skill lê só o que é novo, marca as decisões que mudaram e mantém o mesmo link. O cliente acompanha a evolução no mesmo lugar, com histórico de versões.
 
-### 5. Resolver uma divergência entre documentos
+### 5. Reorganizar telas: juntar, dividir, mover ou tirar
+
+> "Na call pediram para a Auditoria virar uma aba de Movimentações, separar Itens de Cadastros e tirar a página Alertas. Gera a prévia."
+
+A prévia abre com o **Mapa das telas**: o menu de hoje de um lado, o novo do outro, com setas como "junta 2 telas", "divide em 2 telas", "muda de lugar" e "sai do sistema", cada uma com a decisão que a pediu. Cada tela nova diz de onde veio, e a comparação deixa escolher qual tela de hoje comparar. Cada tela que sai tem uma ficha com o print de hoje e o destino do que ela fazia. O validador avisa se alguma tela do menu atual ficou sem destino.
+
+### 6. Resolver uma divergência entre documentos
 
 Se o mockup diz uma coisa e o documento mais recente diz outra, a prévia segue o mais recente e mostra os dois trechos lado a lado na decisão. A divergência fica visível em vez de se perder.
 
-### 6. Preparar a pauta da reunião de validação
+### 7. Preparar a pauta da reunião de validação
 
 As decisões `aberto` já vêm com pergunta, recomendação e quem decide. A lista vai na conversa e pode virar rascunho de e-mail ou pauta, enquanto a prévia mostra o que cada resposta muda na tela.
 

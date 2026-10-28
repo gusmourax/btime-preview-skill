@@ -76,13 +76,14 @@ O que a skill completou por bom senso é `inferencia`, com a justificativa. As d
 <script id="btp-engine">    FIXO     motor
 ```
 
-O motor (versão 2) cuida de:
+O motor (versão 3) cuida de:
 
 - tracejado na cor do tipo e badge clicável em cada `data-d`;
 - cards de decisão com o trecho da fonte, a explicação e os chips de mudança;
 - modo **Documento** (telas e decisões em sequência) e modo **Protótipo** (navegação por `data-goto`, abas `data-tabs`, janelas `data-open`/`data-panel`, filtros, avisos de formulário);
 - abas **Como vai ficar**, **Como está hoje** e **Antes e depois**, esta com um comparador deslizante sobre duas imagens;
 - `larguraMinima` + `ajustar`: a tela é desenhada na largura real (ex.: 1366 px) e encolhe com zoom para caber na moldura, como um print, sem o sistema trocar de layout;
+- **reorganização de telas**: um Mapa das telas no começo do documento (hoje → como vai ficar, com setas "junta 2 telas", "divide em 2 telas", "muda de lugar", "sai do sistema", "continua igual"), uma linha de origem em cada ficha, um comparador que escolhe qual tela de hoje comparar quando a nova junta várias, e uma ficha para cada tela que sai, com o print de hoje e para onde vai o que ela fazia;
 - modo de captura `#so-T01`: mostra só a tela, sem marcações, para tirar o print de "como vai ficar";
 - tema claro e escuro da página, com a prévia sempre no tema do produto.
 
@@ -102,7 +103,8 @@ Detalhado em [`references/existente.md`](../references/existente.md):
    O `app.css` final é `sistema.css` seguido de `ajustes.css`, que contém só o que muda.
 4. **Montar as telas** com um `montar_telas.py` do projeto. Ele limpa ids, links internos e comentários do React, extrai o menu como parte compartilhada, aplica só as mudanças pedidas sobre a marcação real e põe `data-d` no elemento mudado.
 5. **Gerar o "depois"**: o mesmo roteiro aponta para `teste.html#so-Txx`, na mesma largura e no mesmo estado do print de hoje (janela aberta, por exemplo). Com `hoje` e `depois` preenchidos, aparece a aba Antes e depois.
-6. **Medir em vez de adivinhar.** Um passo `js` devolve `scrollWidth` contra `clientWidth`. Foi assim que a skill descobriu que uma tabela ficava 55 px mais larga que 1366, e essa consequência virou uma decisão `aberto`.
+6. **Reorganização.** Quando o pedido muda a estrutura (juntar, dividir, mover ou tirar telas), cada tela nova diz de onde vem (`situacao` e `hoje[].tela`), as que saem vão em `removidas` e o menu de hoje vai em `telasAtuais`. O validador avisa se alguma tela atual ficou sem destino.
+7. **Medir em vez de adivinhar.** Um passo `js` devolve `scrollWidth` contra `clientWidth`. Foi assim que a skill descobriu que uma tabela ficava 55 px mais larga que 1366, e essa consequência virou uma decisão `aberto`.
 
 No fim, a skill encerra o servidor que subiu e informa o que mudou no ambiente.
 
@@ -135,6 +137,8 @@ Com `state.json` existente, ou um link de artefato passado pelo usuário, o pedi
 | A moldura de ~1200 px fazia a tabela virar cartões | `larguraMinima: 1366` + `ajustar` |
 | Painel de abas fora do bloco das abas não trocava | o motor sobe no DOM para achar os `data-tabpane` |
 | Cabeçalho em grid encolhia para o conteúdo | `grid-template-columns: minmax(0, 1fr)` |
+| Imagens com `loading="lazy"` carregavam durante o pulo para uma decisão e empurravam o card para fora da tela | imagens sem lazy (já estão embutidas na página) |
+| Filtros presos no cabeçalho continuavam visíveis numa aba que não era deles, depois de juntar telas | ao juntar telas em abas, levar os filtros para dentro da aba certa |
 | Vídeo deixava o artefato pesado demais | artefato só com imagens; o validador recusa vídeo |
 | `\b` dentro de heredoc virava caractere invisível | cuidado com caracteres de controle em scripts gerados |
 | No Windows, `python` é atalho da Microsoft Store | usar `py -3` e caminhos `C:/...` |

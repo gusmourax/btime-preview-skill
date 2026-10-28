@@ -31,7 +31,7 @@ Descubra, pelo que o usuário já disse e pelos insumos, antes de perguntar:
 - **Projeto novo, refatoração ou ajustes num sistema existente.**
   - *Novo*: não há sistema; as telas saem do mockup, do design system e dos documentos.
   - *Refatoração*: o sistema vai ser refeito; cada tela ganha a aba "Como está hoje" (print, quadro da gravação ou captura) e as decisões descrevem o que muda.
-  - *Existente com ajustes*: o sistema roda, o código está disponível e o pedido é mudar telas que já existem. Leia `references/existente.md`: a prévia sai do HTML e do CSS reais capturados do sistema rodando localmente, com o print de hoje, o print da versão nova e a aba "Antes e depois". O artefato usa só imagens: vídeo pesa demais na página. Use `"tipo": "refatoracao"` em `btp-data`.
+  - *Existente com ajustes*: o sistema roda, o código está disponível e o pedido é mudar telas que já existem. Leia `references/existente.md`: a prévia sai do HTML e do CSS reais capturados do sistema rodando localmente, com o print de hoje, o print da versão nova e a aba "Antes e depois". O artefato usa só imagens: vídeo pesa demais na página. Use `"tipo": "refatoracao"` em `btp-data`. Se o pedido muda a estrutura (tela que muda de lugar, se junta com outra, se divide ou sai), a prévia ganha o Mapa das telas: veja a seção 7.1 de `references/existente.md`.
 - **Quais telas e para quem.** Se a reunião deixou claro, siga; se não, proponha a lista de telas e confirme antes de desenhar.
 
 Pergunte só o que bloqueia. Uma rodada curta de perguntas (com `AskUserQuestion`) é melhor que várias.

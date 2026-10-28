@@ -32,6 +32,7 @@
   --t-referencia: #0b7a6e; --t-referencia-soft: #dcf2ee;
   --t-inferencia: #687083; --t-inferencia-soft: #eceef2;
   --t-aberto: #c2410c;    --t-aberto-soft: #fdebdf;
+  --gone: #b42318;
   --f-display: "Schibsted Grotesk", "Segoe UI", system-ui, sans-serif;
   --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
@@ -44,6 +45,7 @@
     --t-referencia: #4fd1bf; --t-referencia-soft: #0f2f2b;
     --t-inferencia: #9aa1b0; --t-inferencia-soft: #23272f;
     --t-aberto: #ff9a5c; --t-aberto-soft: #3a2014;
+    --gone: #ff8a80;
     color-scheme: dark;
   }
 }
@@ -54,6 +56,7 @@
   --t-referencia: #4fd1bf; --t-referencia-soft: #0f2f2b;
   --t-inferencia: #9aa1b0; --t-inferencia-soft: #23272f;
   --t-aberto: #ff9a5c; --t-aberto-soft: #3a2014;
+  --gone: #ff8a80;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -164,6 +167,45 @@ body.off-reuniao .btp-badge.t-reuniao, body.off-documento .btp-badge.t-documento
 .btp-cmp input[type=range] { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; }
 .btp-cmp:focus-within .linha { width: 3px; box-shadow: 0 0 0 2px var(--surface); }
 .btp-dcard header .mu { font: 600 .66rem var(--f-mono); text-transform: uppercase; letter-spacing: .05em; border: 1px solid var(--tc); color: var(--tc); padding: 0 5px; border-radius: 3px; }
+.btp-cmpsel { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: .84rem; color: var(--muted); }
+.btp-cmpsel button { all: unset; cursor: pointer; font-weight: 600; font-size: .82rem; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.btp-cmpsel button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.btp-cmpsel button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Reorganização: mapa das telas, origem de cada tela e telas que saem */
+.btp-maphead, .btp-maprow { display: grid; grid-template-columns: minmax(0, 1fr) 150px minmax(0, 1fr); gap: 8px 14px; align-items: center; }
+.btp-maphead { font: 600 .72rem var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.btp-maprow { padding-block: 10px; border-top: 1px solid var(--line); --sc: var(--ink); }
+.btp-maprow .de, .btp-maprow .para { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0; }
+.btp-mn, a.btp-mn { display: inline-grid; gap: 1px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); text-decoration: none; font-size: .9rem; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.btp-mn small { font: 500 .68rem var(--f-mono); color: var(--muted); }
+a.btp-mn:hover { border-color: var(--accent); }
+.btp-mn.vazio { display: inline-block; font-weight: 400; color: var(--muted); border-style: dashed; background: transparent; }
+.btp-maprow .seta { position: relative; text-align: center; font: 600 .68rem var(--f-mono); letter-spacing: .05em; text-transform: uppercase; color: var(--sc); }
+.btp-maprow .seta::before { content: ""; position: absolute; left: 0; right: 8px; top: 50%; border-top: 2px solid var(--sc); }
+.btp-maprow .seta::after { content: ""; position: absolute; right: 0; top: calc(50% - 5px); border: 5px solid transparent; border-left: 8px solid var(--sc); border-right: 0; }
+.btp-maprow .seta span { position: relative; background: var(--surface); padding: 0 6px; }
+.btp-maprow .dec { display: inline-flex; flex-wrap: wrap; gap: 3px; }
+.btp-maprow.s-removida { --sc: var(--gone); }
+.btp-maprow.s-removida .de .btp-mn { text-decoration: line-through; text-decoration-color: var(--gone); }
+.btp-maprow.s-igual, .btp-maprow.s-fora, .btp-maprow.s-ajustada { --sc: var(--muted); }
+.btp-maprow.s-igual .btp-mn, .btp-maprow.s-fora .btp-mn { font-weight: 400; }
+@media (max-width: 700px) {
+  .btp-maphead { display: none; }
+  .btp-maprow { grid-template-columns: minmax(0, 1fr); }
+  .btp-maprow .seta { text-align: left; }
+  .btp-maprow .seta::before, .btp-maprow .seta::after { display: none; }
+  .btp-maprow .seta span { padding: 0; }
+  .btp-maprow .seta span::before { content: "↓ "; }
+}
+.btp-orig { font-size: .9rem; max-width: 80ch; }
+.btp-orig > * + * { margin-left: 6px; }
+.btp-orig .sit { font: 600 .68rem var(--f-mono); letter-spacing: .05em; text-transform: uppercase; border: 1px solid currentColor; padding: 0 5px; border-radius: 3px; color: var(--ink); white-space: nowrap; vertical-align: 1px; }
+.btp-orig.s-removida .sit { color: var(--gone); }
+.btp-orig a { color: var(--accent); }
+.btp-gone { border-style: dashed; border-color: var(--gone); }
+.btp-sai { font: 600 .72rem var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--gone); }
+.btp-gone .btp-hoje img { filter: grayscale(.5); }
+.btp-toc a.gone { text-decoration: line-through; text-decoration-color: var(--gone); }
 /* Captura de uma tela só (#so-T01): usada pelo capturar.mjs para gerar o print da versão nova */
 body.btp-so { padding: 0 !important; }
 .btp-so .btp-head, .btp-so .btp-foot, .btp-so .btp-chrome { display: none !important; }
@@ -447,7 +489,7 @@ btpInit.T01 = (root) => {
 <div id="btp"></div>
 
 <script id="btp-engine">
-/* btime-preview engine v2. NÃO EDITAR: tudo que muda por projeto fica em btp-data, nos <template> e em app-js. */
+/* btime-preview engine v3. NÃO EDITAR: tudo que muda por projeto fica em btp-data, nos <template> e em app-js. */
 (() => {
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -477,6 +519,24 @@ btpInit.T01 = (root) => {
   const nOrd = id => parseInt(String(id).replace(/\D/g, ""), 10) || 0;
   window.btpInit = window.btpInit || {};
 
+  /* Reorganização: de onde vem cada tela nova (hoje[].tela), telas que saem (removidas) e telas atuais (telasAtuais). */
+  const removidas = data.removidas || [], atuais = data.telasAtuais || [];
+  const SIT = { nova: "tela nova", ajustada: "ajustes na tela", movida: "muda de lugar", mesclada: "junta telas", dividida: "divide uma tela", removida: "sai do sistema", igual: "continua igual", fora: "fora desta prévia" };
+  const situ = t => t.situacao || ((t.hoje || []).length || t.hojeAviso ? "ajustada" : "nova");
+  const origens = t => {
+    const m = new Map();
+    (t.hoje || []).forEach(x => {
+      const nome = x.tela || t.nome, o = m.get(nome);
+      if (!o) m.set(nome, { nome, local: x.local || "" }); else if (!o.local && x.local) o.local = x.local;
+    });
+    return [...m.values()];
+  };
+  const localNovo = t => t.local || [t.grupo, t.nome].filter(Boolean).join(" › ");
+  const temMapa = removidas.length > 0 || atuais.length > 0 || telas.some(t => ["movida", "mesclada", "dividida"].includes(situ(t)));
+  const fig = (x, alt) => '<figure><img src="' + esc(x.img) + '" alt="' + esc(x.legenda || alt) + '">'
+    + '<figcaption>' + (x.fonte ? '<span class="btp-chip plain">' + esc([x.fonte, x.ref].filter(Boolean).join(" · ")) + '</span>' : '')
+    + (x.tela ? '<b>' + esc(x.tela) + (x.local ? ' · ' + esc(x.local) : '') + '</b>' : '') + esc(x.legenda || "") + '</figcaption></figure>';
+
   const trecho = t => {
     const f = F[t.fonte] || {};
     const href = t.link || f.link;
@@ -505,13 +565,15 @@ btpInit.T01 = (root) => {
     + '<span class="btp-eyebrow">btime-preview · v' + esc(P.versao || 1) + ' · ' + dia(P.geradoEm) + (P.cliente ? ' · ' + esc(P.cliente) : '') + ' · ' + (P.tipo === "refatoracao" ? "refatoração" : "projeto novo") + '</span>'
     + '<h1>' + esc(P.nome) + '</h1>'
     + (P.resumo ? '<p class="btp-lead">' + fmt(P.resumo) + '</p>' : '')
-    + '<div class="btp-stats"><span><b>' + telas.length + '</b>telas</span><span><b>' + decisoes.length + '</b>decisões</span><span><b>' + fontes.length + '</b>fontes</span>'
+    + '<div class="btp-stats"><span><b>' + telas.length + '</b>telas</span>' + (removidas.length ? '<span><b>' + removidas.length + '</b>' + (removidas.length > 1 ? 'telas saem' : 'tela sai') + '</span>' : '') + '<span><b>' + decisoes.length + '</b>decisões</span><span><b>' + fontes.length + '</b>fontes</span>'
     + '</div>'
     + '<div class="btp-bar"><div class="btp-legend"><span>Marcações:</span>'
     + Object.keys(TIPOS).filter(k => cont[k]).map(k => '<button type="button" class="btp-lg t-' + k + '" aria-pressed="true" data-type="' + k + '" title="' + TIPOS[k][1] + '"><i></i>' + TIPOS[k][0] + ' · ' + cont[k] + '</button>').join("")
     + '<button type="button" class="btp-lg" aria-pressed="true" data-type="__all"><i></i>Todas</button></div>'
     + '<div class="btp-switch" role="group" aria-label="Modo de leitura"><button type="button" aria-pressed="true" data-view="doc">Documento</button><button type="button" aria-pressed="false" data-view="proto">Protótipo</button></div></div>'
-    + '<nav class="btp-toc" aria-label="Telas">' + telas.map(t => '<a href="#' + esc(t.id) + '"><small>' + esc(t.id) + '</small>' + esc(t.nome) + '</a>').join("")
+    + '<nav class="btp-toc" aria-label="Telas">' + (temMapa ? '<a href="#mapa"><small>⇄</small>Mapa das telas</a>' : '')
+    + telas.map(t => '<a href="#' + esc(t.id) + '"><small>' + esc(t.id) + '</small>' + esc(t.nome) + '</a>').join("")
+    + removidas.map(r => '<a href="#' + esc(r.id) + '" class="gone" title="Sai do sistema"><small>' + esc(r.id) + '</small>' + esc(r.nome) + '</a>').join("")
     + '<a href="#fontes"><small>≡</small>Fontes</a></nav>'
     + '</header>';
   h += '<div data-pane="doc" class="btp-doc" style="display:grid;gap:28px"></div><div data-pane="proto" hidden></div>';
@@ -654,27 +716,101 @@ btpInit.T01 = (root) => {
   }
 
   /* ---------- Modo documento ---------- */
+  const badgesDe = ids => [...new Set(ids || [])].filter(id => D[id]).map(id => '<button type="button" class="btp-badge t-' + tipo(D[id]) + '" data-dec="' + esc(id) + '" title="' + esc(D[id].titulo) + '" style="position:static">' + esc(id) + '</button>').join("");
+  const linkTela = t => '<a href="#' + esc(t.id) + '">' + esc(t.id) + ' ' + esc(t.nome) + '</a>';
+
+  /* Mapa das telas: uma linha por destino, com as telas de hoje à esquerda e as da versão nova à direita. */
+  if (temMapa) {
+    const no = (nome, local, href) => (href ? '<a class="btp-mn" href="' + esc(href) + '">' : '<span class="btp-mn">') + (local ? '<small>' + esc(local) + '</small>' : '') + esc(nome) + (href ? '</a>' : '</span>');
+    const noNovo = t => no(t.nome, t.id + " · " + localNovo(t), "#" + t.id);
+    const vazio = txt => '<span class="btp-mn vazio">' + fmt(txt) + '</span>';
+    const linha = (s, de, rot, para, ids) => '<div class="btp-maprow s-' + s + '"><div class="de">' + de + '</div><div class="seta"><span>' + esc(rot) + '</span></div><div class="para">' + para + (badgesDe(ids) ? '<span class="dec">' + badgesDe(ids) + '</span>' : '') + '</div></div>';
+    const noHoje = (t, o) => o.length ? o.map(x => no(x.nome, x.local)).join("") : no(t.nome, "");
+    const citadas = new Set(), grupos = [], porOrigem = {};
+    telas.forEach(t => {
+      const s = situ(t), o = origens(t);
+      o.forEach(x => citadas.add(x.nome));
+      if (s === "ajustada" && !o.length) citadas.add(t.nome);
+      if (s === "dividida" && o.length) {
+        const k = o.map(x => x.nome).join("|");
+        if (porOrigem[k]) { porOrigem[k].telas.push(t); return; }
+        grupos.push(porOrigem[k] = { s, o, telas: [t] });
+        return;
+      }
+      grupos.push({ s, o, telas: [t] });
+    });
+    let rows = grupos.map(g => {
+      const t = g.telas[0], ids = g.telas.flatMap(x => x.decisoes || []);
+      if (g.s === "dividida") return linha("dividida", noHoje(t, g.o), g.telas.length > 1 ? "divide em " + g.telas.length + " telas" : SIT.dividida, g.telas.map(noNovo).join(""), ids);
+      if (g.s === "nova") return linha("nova", vazio("não existe hoje"), SIT.nova, noNovo(t), ids);
+      return linha(g.s, noHoje(t, g.o), g.s === "mesclada" ? "junta " + g.o.length + " telas" : (SIT[g.s] || g.s), noNovo(t), ids);
+    }).join("");
+    rows += removidas.map(r => { citadas.add(r.nome); return linha("removida", no(r.nome, r.local, "#" + r.id), SIT.removida, vazio(r.destino || "sai sem substituta"), r.decisoes || decsDe(r.id).map(d => d.id)); }).join("");
+    rows += atuais.map(a => typeof a === "string" ? { nome: a } : a).filter(a => !citadas.has(a.nome))
+      .map(a => a.igual ? linha("igual", no(a.nome, a.local), SIT.igual, no(a.nome, a.local), []) : linha("fora", no(a.nome, a.local), SIT.fora, vazio("não mostrada nesta prévia"), [])).join("");
+    const mp = document.createElement("section"); mp.className = "btp-panel btp-map"; mp.id = "mapa";
+    mp.innerHTML = '<h2>Mapa das telas</h2><p class="btp-lead">De onde vem cada tela da versão nova: o que muda de lugar, o que se junta, o que se divide e o que sai do sistema. Clique numa tela para ver a ficha dela.</p>'
+      + '<div><div class="btp-maphead"><span>Hoje</span><span></span><span>Como vai ficar</span></div>' + rows + '</div>';
+    docPane.append(mp);
+  }
+
+  /* Uma linha, abaixo do objetivo, dizendo de onde a tela vem quando ela não é só ajuste na mesma tela. */
+  const origemHTML = t => {
+    const s = situ(t), o = origens(t);
+    if (s === "ajustada" || (s === "nova" && P.tipo !== "refatoracao" && !temMapa)) return "";
+    const lista = o.map(x => '<b>' + esc(x.nome) + '</b>' + (x.local ? ' (' + esc(x.local) + ')' : '')).join(" + ") || '<b>' + esc(t.nome) + '</b>';
+    const irmas = telas.filter(x => x !== t && situ(x) === "dividida" && origens(x).map(y => y.nome).join("|") === o.map(y => y.nome).join("|"));
+    const txt = {
+      nova: "Não existe no sistema atual.",
+      movida: "Antes em " + (o.length === 1 && o[0].local ? esc(o[0].local) : lista) + "; agora em <b>" + esc(localNovo(t)) + "</b>.",
+      mesclada: "Junta " + lista + " numa tela só, em <b>" + esc(localNovo(t)) + "</b>.",
+      dividida: "Sai de " + lista + (irmas.length ? ", que se divide também em " + irmas.map(linkTela).join(", ") : "") + ".",
+    }[s] || "";
+    return '<p class="btp-orig s-' + esc(s) + '"><span class="sit">' + esc(s === "mesclada" ? "junta " + o.length + " telas" : SIT[s] || s) + '</span><span>' + txt + '</span>' + (temMapa ? '<a href="#mapa">Ver no mapa</a>' : '') + '</p>';
+  };
+
+  const cmpPares = {};
   telas.forEach(tela => {
     const sec = document.createElement("section");
     sec.className = "btp-screen"; sec.id = tela.id; sec.dataset.screen = tela.id;
     const ds = decsDe(tela.id).sort((a, b) => nOrd(a.id) - nOrd(b.id));
     const hoje = tela.hoje || [], depois = tela.depois || [];
-    const fig = (x, alt) => '<figure><img src="' + esc(x.img) + '" alt="' + esc(x.legenda || alt) + '" loading="lazy">'
-      + '<figcaption>' + (x.fonte ? '<span class="btp-chip plain">' + esc([x.fonte, x.ref].filter(Boolean).join(" · ")) + '</span>' : '') + esc(x.legenda || "") + '</figcaption></figure>';
-    const imgA = hoje.find(x => x.img), imgD = depois.find(x => x.img);
-    const comparar = !!(imgA && imgD);
+    // Antes e depois: cada print de hoje se compara com o print de depois na mesma posição (ou com o primeiro).
+    const hImg = hoje.filter(x => x.img), dImg = depois.filter(x => x.img);
+    const pares = dImg.length ? hImg.map((a, i) => ({ a, d: dImg[i] || dImg[0], rot: a.tela || "Print " + (i + 1) })) : [];
+    cmpPares[tela.id] = pares;
+    const p0 = pares[0];
     sec.innerHTML = '<div class="btp-screen-head"><div class="t"><div><span class="btp-chip plain">' + esc(tela.id) + '</span>' + (tela.grupo ? '<span class="btp-eyebrow">' + esc(tela.grupo) + '</span>' : '') + '</div><h2>' + esc(tela.nome) + '</h2>'
       + (tela.objetivo ? '<p class="btp-muted" style="max-width:80ch">' + fmt(tela.objetivo) + '</p>' : '')
+      + origemHTML(tela)
       + (!hoje.length && tela.hojeAviso ? '<p class="btp-nohoje">Sem imagem do sistema atual: ' + fmt(tela.hojeAviso) + '</p>' : '') + '</div>'
-      + (hoje.length ? '<div class="btp-tabs" role="tablist"><button role="tab" aria-selected="true" data-tabv="new">Como vai ficar</button><button role="tab" aria-selected="false" data-tabv="old">Como está hoje</button>' + (comparar ? '<button role="tab" aria-selected="false" data-tabv="cmp">Antes e depois</button>' : '') + '</div>' : '')
+      + (hoje.length ? '<div class="btp-tabs" role="tablist"><button role="tab" aria-selected="true" data-tabv="new">Como vai ficar</button><button role="tab" aria-selected="false" data-tabv="old">Como está hoje</button>' + (p0 ? '<button role="tab" aria-selected="false" data-tabv="cmp">Antes e depois</button>' : '') + '</div>' : '')
       + '</div><div data-v="new"></div>'
       + (hoje.length ? '<div data-v="old" hidden><div class="btp-frame"><div class="btp-hoje">' + hoje.map(x => fig(x, "Tela atual: " + tela.nome)).join("") + '</div></div></div>' : '')
-      + (comparar ? '<div data-v="cmp" hidden><div class="btp-frame"><div class="btp-hoje">'
-        + ('<div class="btp-cmp"><img src="' + esc(imgA.img) + '" alt="Hoje: ' + esc(tela.nome) + '"><div class="depois"><img src="' + esc(imgD.img) + '" alt="Como vai ficar: ' + esc(tela.nome) + '"></div><span class="linha"></span><span class="rot a">Hoje</span><span class="rot d">Como vai ficar</span>'
-          + '<input type="range" min="0" max="100" value="50" aria-label="Arraste para comparar hoje e como vai ficar"></div><p class="btp-muted" style="font-size:.86rem">Arraste a linha para comparar.</p>')
+      + (p0 ? '<div data-v="cmp" hidden><div class="btp-frame"><div class="btp-hoje">'
+        + (pares.length > 1 ? '<div class="btp-cmpsel" role="group" aria-label="Tela de hoje para comparar"><span>Comparar com</span>' + pares.map((p, i) => '<button type="button" data-cmp="' + i + '" aria-pressed="' + (i === 0) + '">' + esc(p.rot) + '</button>').join("") + '</div>' : '')
+        + '<div class="btp-cmp"><img class="a" src="' + esc(p0.a.img) + '" alt="Hoje: ' + esc(p0.a.tela || tela.nome) + '"><div class="depois"><img src="' + esc(p0.d.img) + '" alt="Como vai ficar: ' + esc(tela.nome) + '"></div><span class="linha"></span><span class="rot a">' + esc(pares.length > 1 ? "Hoje · " + p0.rot : "Hoje") + '</span><span class="rot d">Como vai ficar</span>'
+        + '<input type="range" min="0" max="100" value="50" aria-label="Arraste para comparar hoje e como vai ficar"></div><p class="btp-muted" style="font-size:.86rem">Arraste a linha para comparar.</p>'
         + '</div></div></div>' : '')
       + (ds.length ? '<div class="btp-decs">' + ds.map(d => cardHTML(d, tela.id)).join("") + '</div>' : '<p class="btp-muted">Nenhuma decisão ligada a esta tela.</p>');
     $('[data-v="new"]', sec).append(mount(tela, "doc"));
+    docPane.append(sec);
+  });
+
+  /* Telas que saem do sistema: ficha curta com o print de hoje, para onde vai o que ela fazia e a decisão. */
+  removidas.forEach(r => {
+    const sec = document.createElement("section");
+    sec.className = "btp-screen btp-gone"; sec.id = r.id; sec.dataset.screen = r.id;
+    const ds = decsDe(r.id).sort((a, b) => nOrd(a.id) - nOrd(b.id));
+    const para = (r.para || []).map(id => telas.find(t => t.id === id)).filter(Boolean);
+    const hoje = r.hoje || [];
+    sec.innerHTML = '<div class="btp-screen-head"><div class="t"><div><span class="btp-chip plain">' + esc(r.id) + '</span><span class="btp-sai">Sai do sistema</span></div><h2>' + esc(r.nome) + '</h2>'
+      + (r.local || r.rota ? '<p class="btp-muted">Hoje em ' + esc([r.local, r.rota].filter(Boolean).join(" · ")) + '</p>' : '')
+      + (r.destino || para.length ? '<p class="btp-orig s-removida"><span class="sit">Para onde vai</span><span>' + fmt(r.destino || "") + (para.length ? ' Ver ' + para.map(linkTela).join(", ") + '.' : '') + '</span>' + (temMapa ? '<a href="#mapa">Ver no mapa</a>' : '') + '</p>' : '')
+      + (!hoje.length && r.hojeAviso ? '<p class="btp-nohoje">Sem imagem do sistema atual: ' + fmt(r.hojeAviso) + '</p>' : '')
+      + '</div></div>'
+      + (hoje.length ? '<div class="btp-frame"><div class="btp-hoje">' + hoje.map(x => fig(x, "Tela atual: " + r.nome)).join("") + '</div></div>' : '')
+      + (ds.length ? '<div class="btp-decs">' + ds.map(d => cardHTML(d, null)).join("") + '</div>' : '<p class="btp-muted">Nenhuma decisão explica a saída desta tela.</p>');
     docPane.append(sec);
   });
 
@@ -783,6 +919,17 @@ btpInit.T01 = (root) => {
     }
     const j = e.target.closest("[data-jump]");
     if (j) { e.preventDefault(); jump(j.dataset.jump, j.getAttribute("href").slice(1)); return; }
+    const cs = e.target.closest("[data-cmp]");
+    if (cs) {
+      const sec = cs.closest(".btp-screen"), p = (cmpPares[sec.dataset.screen] || [])[+cs.dataset.cmp];
+      if (!p) return;
+      $$("[data-cmp]", sec).forEach(b => b.setAttribute("aria-pressed", String(b === cs)));
+      const box = $(".btp-cmp", sec), a = $("img.a", box);
+      a.src = p.a.img; a.alt = "Hoje: " + (p.a.tela || "");
+      $(".depois img", box).src = p.d.img;
+      $(".rot.a", box).textContent = "Hoje · " + p.rot;
+      return;
+    }
     const tb = e.target.closest("[data-tabv]");
     if (tb) {
       const sec = tb.closest(".btp-screen");
@@ -817,5 +964,6 @@ btpInit.T01 = (root) => {
   if (hash === "prototipo") v0 = "proto";
   setView(v0);
   if (telas.some(t => t.id === hash)) setTimeout(() => go(hash, v0), 60);
+  else if (v0 === "doc" && /^[\w-]+$/.test(hash) && document.getElementById(hash)) setTimeout(() => document.getElementById(hash).scrollIntoView({ block: "start" }), 60);
 })();
 </script>

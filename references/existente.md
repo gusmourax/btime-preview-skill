@@ -10,6 +10,7 @@ Use este caminho quando o sistema já existe, o código está disponível (pasta
 5. Montar as telas da versão nova a partir do HTML capturado
 6. Decisões: marcar só o que muda
 7. Gerar o "como vai ficar" e conferir
+   7.1 Quando telas mudam de lugar, se juntam, se dividem ou saem
 8. Tamanho, privacidade e cuidados
 
 ## 1. Ler o pedido e a gravação
@@ -87,6 +88,20 @@ Em `btp-data`, cada tela leva `"larguraMinima": 1366, "ajustar": true`: a tela �
 2. O motor tem um modo de captura: `teste.html#so-T01` mostra só a tela T01, sem marcações, na largura da janela. Com um segundo roteiro (`roteiros/captura-depois.json`), tire o print de cada tela, no mesmo estado do print de hoje (mesma janela aberta, mesma largura), em `depois/`.
 3. Ponha em cada tela `"depois": [ { "img": "depois/t01.png" } ]`. Com `hoje` e `depois` preenchidos aparece a aba **Antes e depois**.
 4. Monte e valide de novo. Olhe pelo menos: uma tela no modo documento (encolhida), uma no protótipo (menu, abas, janelas) e a aba Antes e depois. Meça o que parece apertado com um passo `js` (`scrollWidth` contra `clientWidth`) em vez de adivinhar.
+
+## 7.1 Quando telas mudam de lugar, se juntam, se dividem ou saem
+
+Nem todo pedido fica dentro de uma tela. "Essa auditoria podia ficar dentro de movimentações", "cadastros está grande demais, separa os itens", "alertas pode sair, o sino já resolve" mudam a estrutura do sistema, e a prévia precisa mostrar o que foi para onde, não só como cada tela ficou.
+
+1. **Capture o menu de hoje** e liste as telas atuais em `telasAtuais` (nome e local). É o que permite ao validador apontar uma tela que sumiu sem explicação.
+2. **Classifique cada tela da versão nova** com `situacao`: `mesclada`, `dividida`, `movida`, `nova` ou `ajustada` (padrão). Em cada print de `hoje`, diga de qual tela ele é (`tela`) e onde ela fica (`local`).
+3. **Capture o "hoje" de todas as telas de origem**: numa mescla, um print de cada tela que se junta; numa divisão, o print da tela original no estado que interessa (a aba que vira tela própria, por exemplo).
+4. **Monte as telas novas a partir da marcação real**: uma tela mesclada costuma ser a principal com abas, em que cada aba reaproveita o `<main>` de uma tela de hoje (sem o título dela); uma dividida é a tela original sem as abas que saíram. O menu compartilhado muda junto: itens que saem, itens novos, grupos novos. Se um item do menu só existe em uma tela (a marcação do grupo novo, por exemplo), use um segundo `data-shared` para não repetir o badge em todas.
+5. **Tire os prints de depois na mesma ordem dos de hoje**, inclusive o de cada aba de uma tela mesclada (`clicar` na aba antes do `print`, no modo `#so-T01`).
+6. **Telas que saem** vão em `removidas`, com o print de hoje, o `destino` (para onde vai o que ela fazia) e a decisão com `"mudanca": "remove"` citando o id `X1`.
+7. Elementos que estavam presos à estrutura antiga mudam junto: filtros que ficavam no cabeçalho de uma tela agora com abas vão para dentro da aba certa; um botão que abria uma tela que saiu perde o destino. O validador acusa `data-goto` para tela inexistente.
+
+O contrato completo dos campos está em `references/artefato.md`, seção 2.1.
 
 ## 8. Tamanho, privacidade e cuidados
 
